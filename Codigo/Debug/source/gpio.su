@@ -1,0 +1,5 @@
+../SDK/CMSIS/core_cm4.h:1677:22:__NVIC_EnableIRQ	16	static
+../SDK/CMSIS/core_cm4.h:1805:22:__NVIC_SetPriority	16	static
+../source/gpio.c:82:6:init_pins	4	static
+../source/gpio.c:100:6:init_nvic	8	static
+../source/gpio.c:106:6:PORTC_IRQHandler	4	static
