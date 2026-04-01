@@ -19,6 +19,8 @@
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 
+
+
 // Ports
 enum { PA, PB, PC, PD, PE };
 
@@ -60,35 +62,43 @@ typedef uint8_t pin_t;
 /*******************************************************************************
  * FUNCTION PROTOTYPES WITH GLOBAL SCOPE
  ******************************************************************************/
-
+/**
+ * @brief Configures the specified pin as GPIO and activates it's clock
+ * @param pint the pint whose GPIO you wish to initialize
+ * @return ERROR if the initialization was not successful
+ */
+bool gpioInit(pin_t pin);
 /**
  * @brief Configures the specified pin to behave either as an input or an output
  * @param pin the pin whose mode you wish to set (according PORTNUM2PIN)
  * @param mode INPUT, OUTPUT, INPUT_PULLUP or INPUT_PULLDOWN.
  */
-//void gpioMode (pin_t pin, uint8_t mode);
+void gpioMode (pin_t pin, uint8_t mode);
 
 /**
  * @brief Write a HIGH or a LOW value to a digital pin
  * @param pin the pin to write (according PORTNUM2PIN)
  * @param val Desired value (HIGH or LOW)
  */
-//void gpioWrite (pin_t pin, bool value);
+void gpioWrite (pin_t pin, bool value);
 
 /**
  * @brief Toggle the value of a digital pin (HIGH<->LOW)
  * @param pin the pin to toggle (according PORTNUM2PIN)
  */
-//void gpioToggle (pin_t pin);
+void gpioToggle (pin_t pin);
 
 /**
  * @brief Reads the value from a specified digital pin, either HIGH or LOW.
  * @param pin the pin to read (according PORTNUM2PIN)
  * @return HIGH or LOW
  */
-//bool gpioRead (pin_t pin);
-void init_pins(void);
+bool gpioRead (pin_t pin);
+
 void init_nvic(void);
+void testInterruptSW2(void);
+void fallingEdgeIRQC(pin_t pin);
+void PORT_IRQHANDLER(void);
 
 /*******************************************************************************
  ******************************************************************************/

@@ -25,7 +25,7 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := MyBlink
+BUILD_ARTIFACT_NAME := controlDeAccesos
 BUILD_ARTIFACT_EXTENSION := axf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
@@ -37,24 +37,24 @@ all:
 	+@$(MAKE) --no-print-directory main-build && $(MAKE) --no-print-directory post-build
 
 # Main-build Target
-main-build: MyBlink.axf
+main-build: controlDeAccesos.axf
 
 # Tool invocations
-MyBlink.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
+controlDeAccesos.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU Linker'
-	arm-none-eabi-gcc -nostdlib -Xlinker -Map="MyBlink.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -T MyBlink_Debug.ld -o "MyBlink.axf" $(OBJS) $(USER_OBJS) $(LIBS)
+	@echo "Template not found for name "memory.ldt"." && echo "The name was interpreted by this TemplateLoader: com.crt.advproject.linkertemplate.FMLinkerFileTemplateLoader@5c5be3d0." && false
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) MyBlink.axf
+	-$(RM) controlDeAccesos.axf
 	-@echo ' '
 
 post-build:
 	-@echo 'Performing post-build steps'
-	-arm-none-eabi-size "MyBlink.axf"; # arm-none-eabi-objcopy -v -O binary "MyBlink.axf" "MyBlink.bin" ; # checksum -p MK64FN1M0xxx12 -d "MyBlink.bin";
+	-arm-none-eabi-size "controlDeAccesos.axf"; # arm-none-eabi-objcopy -v -O binary "controlDeAccesos.axf" "controlDeAccesos.bin" ; # checksum -p MK64FN1M0xxx12 -d "controlDeAccesos.bin";
 	-@echo ' '
 
 .PHONY: all clean dependents main-build post-build

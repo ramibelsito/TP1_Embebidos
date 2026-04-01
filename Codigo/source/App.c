@@ -56,7 +56,7 @@ void App_Init (void)
 
     gpioMode(PIN_SW2, INPUT);
 */
-	init_pins();
+	testInterruptSW2();
 	init_nvic();
 }
 
