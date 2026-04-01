@@ -8,7 +8,9 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include source/subdir.mk
+-include source/mcal/subdir.mk
+-include source/hal/subdir.mk
+-include source/app/subdir.mk
 -include SDK/startup/subdir.mk
 -include SDK/CMSIS/subdir.mk
 ifneq ($(MAKECMDGOALS),clean)
