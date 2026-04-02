@@ -45,7 +45,7 @@ main-build: controlDeAccesos.axf
 controlDeAccesos.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU Linker'
-	@echo "Template not found for name "memory.ldt"." && echo "The name was interpreted by this TemplateLoader: com.crt.advproject.linkertemplate.FMLinkerFileTemplateLoader@5c5be3d0." && false
+	arm-none-eabi-gcc -nostdlib -Xlinker -Map="controlDeAccesos.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -T controlDeAccesos_Debug.ld -o "controlDeAccesos.axf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

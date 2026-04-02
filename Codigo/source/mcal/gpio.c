@@ -1,6 +1,6 @@
 #include "gpio.h"
 #include "hardware.h"
-#include "board.h"
+#include "hal/board.h"
 typedef enum
 {
 	PORT_mAnalog,
@@ -44,7 +44,6 @@ bool gpioInit(pin_t pin) {
 		break;
 	default:
 		return false;
-		break;
 	}
 
 	pPorts[port]->PCR[number] = PORT_PCR_MUX(PORT_mGPIO);		// GPIO
@@ -141,16 +140,6 @@ void PORTC_IRQHandler(void) {
 }
 
 /* Función para testear las interrupciones de GPIO*/
-void testInterruptSW2(void) {
-
-	    gpioInit(PIN_LED_RED);
-	    gpioMode(PIN_LED_RED, OUTPUT);
-	    gpioWrite(PIN_LED_RED, HIGH);
-
-
-	    /* ------------------- SW2 (PTC6) ------------------------- */
-
-	    gpioInit(PIN_SW2);
-	    gpioMode(PIN_SW2, INPUT);
-	    fallingEdgeIRQC(PIN_SW2);
+void testInterruptSW2(pin_t pin) {
+	fallingEdgeIRQC(pin);
 }

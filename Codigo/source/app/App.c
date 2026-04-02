@@ -8,11 +8,13 @@
  * INCLUDE HEADER FILES
  ******************************************************************************/
 
-#include "board.h"
-#include "gpio.h"
-#include "SysTick.h"
+#include "hal/board.h"
+#include "mcal/gpio.h"
+#include "mcal/SysTick.h"
 
 volatile uint32_t delay = 0;
+
+static bool test_var = 0;
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -31,9 +33,20 @@ volatile uint32_t delay = 0;
                         GLOBAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
-void test(void)
-{
-	return;
+
+
+
+
+void led_toggle(void) {
+	if(!test_var) {
+		gpioToggle(PIN_LED_RED);
+	}
+}
+
+void sensor_read(void) {
+	if(gpioRead(PIN_SW2) == SW_ACTIVE) {
+		test_var = !test_var;
+	}
 }
 
 void sleepFunction(void);
@@ -56,7 +69,22 @@ void App_Init (void)
 
     gpioMode(PIN_SW2, INPUT);
 */
-	testInterruptSW2();
+	if(gpioInit(PIN_LED_RED)) {
+		gpioMode(PIN_LED_RED, OUTPUT);
+		gpioWrite(PIN_LED_RED, HIGH);
+	}
+
+	if(gpioInit(PIN_SW2)) {
+		gpioMode(PIN_SW2, INPUT);
+	}
+
+
+	SysTick_Init(1000); // 1ms tick
+
+	pisr_register(led_toggle, 500);     // cada 500 ms
+	pisr_register(sensor_read, 100);    // cada 100 ms
+
+	//testInterruptSW2(PIN_SW2);
 	init_nvic();
 }
 

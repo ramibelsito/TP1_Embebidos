@@ -1,7 +1,7 @@
 /***************************************************************************//**
   @file     SysTick.h
   @brief    SysTick driver
-  @author   Nicolás Magliola
+  @author   Nicolï¿½s Magliola
  ******************************************************************************/
 
 #ifndef _SYSTICK_H_
@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <stdbool.h>
+#include <stdint.h>
 
 
 /*******************************************************************************
@@ -20,10 +21,19 @@
 
 #define SYSTICK_ISR_FREQUENCY_HZ 1000U
 
+#define PISR_CANT 8
+
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
  ******************************************************************************/
+
+typedef void (*pisr_callback_t) (void);
+
+typedef struct {
+	void (*callback)(void);
+	unsigned int period;
+}pisr_t;
 
 /*******************************************************************************
  * VARIABLE PROTOTYPES WITH GLOBAL SCOPE
@@ -33,12 +43,8 @@
  * FUNCTION PROTOTYPES WITH GLOBAL SCOPE
  ******************************************************************************/
 
-/**
- * @brief Initialize SysTic driver
- * @param funcallback Function to be call every SysTick
- * @return Initialization and registration succeed
- */
-bool SysTick_Init (void (*funcallback)(void));
+bool pisr_register(pisr_callback_t fun, uint32_t period);
+bool SysTick_Init(uint32_t tick_hz);
 
 
 /*******************************************************************************
