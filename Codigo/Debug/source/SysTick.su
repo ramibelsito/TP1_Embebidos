@@ -1,3 +1,0 @@
-../source/SysTick.c:15:9:SysTick_Handler	8	static
-../source/SysTick.c:25:6:funcallback	4	static
-../source/SysTick.c:31:6:SysTick_Init	16	static
