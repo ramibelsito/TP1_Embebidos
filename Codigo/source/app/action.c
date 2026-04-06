@@ -49,16 +49,16 @@ uint32_t inputComposit(bool wipe)
 	}
 	switch (inputType)
 	{
-		case right:
+		case RIGHTTURN:
 			break;
-		case left:
+		case LEFTTURN:
 			break;
-		case click:
+		case CLICK:
 			break;
-		case doubleClick:
+		case DOUBLECLICK:
 			return result;
 			break;
-		case sostainedClick:
+		case CLICKHOLD:
 			break;
 		default:
 			break;

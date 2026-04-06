@@ -3,6 +3,8 @@
 #define _ACTION_H_
 
 
+#include <stdbool.h>
+#include <stdint.h>
 
 
 // FSM States

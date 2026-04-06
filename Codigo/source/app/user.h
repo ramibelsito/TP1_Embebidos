@@ -1,6 +1,9 @@
 #ifndef _USER_H_
 #define _USER_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 // User Information Data Type
 typedef struct user_t
 {
@@ -9,7 +12,7 @@ typedef struct user_t
 	bool adminPermit;
 } user_t;
 
-extern user_t userDataset[] = {};
+extern user_t userDataset[];
 
 // Starts initial userDataset
 bool initUserSystem(void);

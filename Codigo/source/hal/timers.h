@@ -1,6 +1,10 @@
 #ifndef _TIMER_H_
 #define _TIMER_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
+
 typedef struct TIMER
 {
 	uint32_t timerID;

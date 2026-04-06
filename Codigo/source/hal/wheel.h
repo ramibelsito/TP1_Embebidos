@@ -1,5 +1,7 @@
 #ifndef _WHEEL_H_
 #define _WHEEL_H_
+#include <stdbool.h>
+#include <stdint.h>
 
 enum wheelInput
 {

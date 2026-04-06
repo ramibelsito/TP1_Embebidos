@@ -1,23 +1,29 @@
 #include "mcal/gpio.h"
 
+#include "mcal/board.h"
+#include "hal/wheel.h"
+#include "mcal/SysTick.h"
 
-#define PIN_RCHA	// Purto del canal A de la ruedita
-#define PIN_RCHB	// Puerto del canal B de la ruedita
-#define PIN_RCHC 	// Puerto del canal C de la ruedita
+#define WHEEL_READ_TIME	1
 
-
-#define WHEEL_READ_TIME	500
-
-#define BUFFER_SIZE		20 			// Number of elements of encoderData
+#define BUFFER_SIZE		100 			// Number of elements of encoderData
 
 #define TWO_BIT_MASK 	0x03
 
+uint8_t clickCounter = 0;
 bool wheelInputFlag;
 
-uint8_t validPrev;
-enum {LEFT, RIGHT};
+uint8_t validPrev = 2;
 
-bool dir = LEFT;
+
+uint8_t dir = LEFTTURN;
+
+enum
+{
+	FIRSTC,
+	SECONDC,
+	THIRDC
+};
 
 
 typedef union {
@@ -32,13 +38,13 @@ typedef union {
 
 encoder_t encoderData[BUFFER_SIZE];
 
-uint32_t index = 0;		// Global index to move through encoderData
-uint16_t move = 0;
+uint32_t idx = 0;		// Global idx to move through encoderData
+uint8_t move = 0;
 
 
 
 
-
+void wheelReadGPIO(void);
 
 
 
@@ -52,94 +58,106 @@ bool wheelInit()
 	if(!gpioInit(PIN_RCHB)) {
 		return false;		// Si no se inicializa bien, devuelve un false
 	}
-	if(!gpioInit(PIN_RCHC)) {
+	if(!gpioInit(PIN_RCHD)) {
 		return false;		// Si no se inicializa bien, devuelve un false
 	}
 	gpioMode(PIN_RCHA, INPUT);
 	gpioMode(PIN_RCHB, INPUT);
-	gpioMode(PIN_RCHC, INPUT);
+	gpioMode(PIN_RCHD, INPUT);
 
-	gpioRegister(wheelReadGPIO, WHEEL_READ_TIME);		// Read wheel data every WHEEL_READ_TIME (ms)
 
+	pisr_register(wheelReadGPIO, WHEEL_READ_TIME);		// Read wheel data every WHEEL_READ_TIME (ms)
+	return true;
 }
 
-bool wheelReadGPIO(void) {
-	encoderData[index].rcha = gpioRead(PIN_RCHA);
-	encoderData[index].rchb = gpioRead(PIN_RCHB);
-	encoderData[index].rchd = gpioRead(PIN_RCHD);
-	encoderData[index].free = 0;
+void wheelReadGPIO(void) {
+	encoderData[idx].rcha = gpioRead(PIN_RCHA);
+	encoderData[idx].rchb = gpioRead(PIN_RCHB);
+	encoderData[idx].rchd = gpioRead(PIN_RCHD);
+	encoderData[idx].free = 0;
 
-	index++;
-	if(index > BUFFER_SIZE - 1) {			// Index lives between 0 and 19
-		index = index % BUFFER_SIZE;
+	idx++;
+	if(idx > BUFFER_SIZE - 1) {			// idx lives between 0 and 19
+		idx = idx % BUFFER_SIZE;
 	}
+	clickCounter += 1;
 }
 
 
-uint32_t readWheel()
+
+
+uint32_t readWheel(void)
 {
-	// Compares last 2 bits to know if there is a new value
-	if(((validPrev & TWO_BIT_MASK) != (encoderData[index] & TWO_BIT_MASK))) {
-		switch(validPrev & TWO_BIT_MASK) {
-			case 0x00:
-				if((encoderData[index] & TWO_BIT_MASK) == 0x02) {
-					move++;
-					dir = RIGHT;
-				}
-				else if((encoderData[index] & TWO_BIT_MASK) == 0x01) {
-					move++;
-					dir = LEFT;
-				}
-				else if((encoderData[index] & TWO_BIT_MASK) == 0x03) {
-					move = 2;
-				}
-				break;
-			case 0x01:
-				if(encoderData[index] & TWO_BIT_MASK) {
-					move++;
-				}
-				else if(dir == LEFT && (encoderData[index] & TWO_BIT_MASK) == 0x02) {
-					move = move+2;
-				}
-				else if(encoderData[index] == 0x00) {
-					move = 0;
-				}
-				break;
-			case 0x02:
-				if((encoderData[index] & TWO_BIT_MASK) == 0x00) {
-					move++;
-				}
-				else if(dir == LEFT && (encoderData[index] & TWO_BIT_MASK) == 0x01) {
-					move = 4;
-				}
-				else if(dir == RIGHT && (encoderData[index] & TWO_BIT_MASK) == 0x03) {
-					move++;
-				}
-				break;
-			case 0x03:
-				if((encoderData[index] & TWO_BIT_MASK) == 0x02) {
-					dir = LEFT;
-					move++;
-				}
-				else if((encoderData[index] & TWO_BIT_MASK) == 0x01) {
-					dir = RIGHT;
-					move++;
-				}
-				else if((encoderData[index] & TWO_BIT_MASK) == 0x00) {
-					move = 2;
-				}
-				break;
-		}
-		validPrev = (encoderData[index] & 0x03);
-	}
+	static uint8_t clickState = 0;
 
-	if(move>3) {
-		return ((dir == RIGHT)? RIGHTTURN : LEFTTURN);
-	}
-	else {
-		return IDLE;
-	}
+
+
+    static uint8_t prev = 0;
+    static int8_t acc = 0;
+
+    uint8_t curr = (encoderData[idx].raw & TWO_BIT_MASK);
+
+    static const int8_t table[4][4] = {
+ // curr  00, 01, 10, 11	prev
+        { 0, -1, +1,  0}, // 00
+        {+1,  0,  0, -1}, // 01
+        {-1,  0,  0, +1}, // 10
+        { 0, +1, -1,  0} //  11
+    };
+
+    int8_t delta = table[prev][curr];
+
+    uint8_t diff = prev ^ curr;
+
+    // detectar salto doble
+    if(diff == 0x03) {
+        if(acc > 0) delta = +2;
+        else if(acc < 0) delta = -2;
+        else delta = 0; // ambiguo
+    }
+
+    acc += delta;
+    prev = curr;
+
+    if(acc >= 3) {
+        acc = 0;
+        return RIGHTTURN;
+    }
+    else if(acc <= -3) {
+        acc = 0;
+        return LEFTTURN;
+    }
+
+    if (!encoderData[idx].rchd && !clickState)
+    {
+    	clickState = 1;
+    	clickCounter = 0;
+    }
+    else if (!encoderData[idx].rchd && clickState == 1 && clickCounter > 300)
+    {
+    	clickState = 0;
+    	return CLICKHOLD;
+    }
+    else if (encoderData[idx].rchd && clickState == 1 && clickCounter < 100)
+    {
+    	clickCounter = 0;
+    	clickState = 2;
+    }
+    else if (encoderData[idx].rchd && clickState == 2 && clickCounter > 200)
+    {
+    	clickState = 0;
+    	return CLICK;
+    }
+    else if (!encoderData[idx].rchd && clickState == 2 && clickCounter < 200)
+    {
+    	clickState = 3;
+    }
+    else if (encoderData[idx].rchd && clickState == 3)
+    {
+    	clickState = 0;
+    	return DOUBLECLICK;
+    }
+    return IDLE;
 }
-
 
 
