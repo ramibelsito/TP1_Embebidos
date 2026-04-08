@@ -122,7 +122,7 @@ uint32_t readWheel(void)
     if(acc >= 3) {
         acc = 0;
         return RIGHTTURN;
-    }
+				}
     else if(acc <= -3) {
         acc = 0;
         return LEFTTURN;
@@ -132,7 +132,7 @@ uint32_t readWheel(void)
     {
     	clickState = 1;
     	clickCounter = 0;
-    }
+				}
     else if (!encoderData[idx].rchd && clickState == 1 && clickCounter > 300)
     {
     	clickState = 0;
@@ -142,22 +142,25 @@ uint32_t readWheel(void)
     {
     	clickCounter = 0;
     	clickState = 2;
-    }
+				}
     else if (encoderData[idx].rchd && clickState == 2 && clickCounter > 200)
     {
     	clickState = 0;
     	return CLICK;
-    }
+				}
     else if (!encoderData[idx].rchd && clickState == 2 && clickCounter < 200)
     {
     	clickState = 3;
-    }
+				}
     else if (encoderData[idx].rchd && clickState == 3)
     {
     	clickState = 0;
     	return DOUBLECLICK;
-    }
-    return IDLE;
+	}
+	else {
+		return IDLE;
+	}
 }
+
 
 
