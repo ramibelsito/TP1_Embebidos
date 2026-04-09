@@ -16,11 +16,13 @@ uint16_t shiftRead() {
 
 void shiftWriteWord(uint16_t value) {
   shiftRegister = value;
+  return;
 }
 
 void shiftWriteBit(int index, bool state) {
   if (state) shiftRegister |= (1 << index);
   else shiftRegister &= ~(1 << index);
+  return;
 }
 
 bool shiftOutUpdate() {

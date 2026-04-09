@@ -16,9 +16,9 @@
 #include "hal/display.h"
 #include "hal/wheel.h"
 #include "hal/card.h"
-
+#include "hal/leds.h"
 #include "mcal/gpio.h"
-#include "mcal/board.h"
+#include "hal/board.h"
 #include "mcal/SysTick.h"
 
 /*******************************************************************************
@@ -66,26 +66,15 @@ void App_Init (void)
 	//testInterruptSW2(PIN_SW2);
 	init_nvic();*/
 	SysTick_Init(100);
-	if(gpioInit(PIN_LED_RED)) {
-			gpioMode(PIN_LED_RED, OUTPUT);
-			gpioWrite(PIN_LED_RED, HIGH);
-		}
-
-	if (gpioInit(PIN_LED_BLUE))
+	if (ledsInit(WHITE))
 	{
-		gpioMode(PIN_LED_BLUE, OUTPUT);
-		gpioWrite(PIN_LED_BLUE, HIGH);
-	}
-
-	if (gpioInit(PIN_LED_GREEN))
-	{
-		gpioMode(PIN_LED_GREEN, OUTPUT);
-		gpioWrite(PIN_LED_GREEN, HIGH);
+		ledOff(WHITE);
+		return;
 	}
 
 	if (wheelInit() == false)
 	{
-		gpioWrite(PIN_LED_RED, LOW);
+		ledOn(RED);
 	}
 }
 
@@ -96,34 +85,25 @@ void App_Run (void)
 	switch (result)
 	{
 	case RIGHTTURN:
-		gpioWrite(PIN_LED_GREEN, LOW);
-		gpioWrite(PIN_LED_RED, HIGH);
-		gpioWrite(PIN_LED_BLUE, HIGH);
+		ledOn(GREEN);
 		break;
 	case LEFTTURN:
-		gpioWrite(PIN_LED_GREEN, HIGH);
-		gpioWrite(PIN_LED_RED, LOW);
-		gpioWrite(PIN_LED_BLUE, HIGH);
+		ledOn(RED);
 		break;
 	case IDLE:
 
 		break;
 	case CLICK:
-		gpioWrite(PIN_LED_GREEN, LOW);
-		gpioWrite(PIN_LED_RED, LOW);
-		gpioWrite(PIN_LED_BLUE, HIGH);
+		ledOn(YELLOW);
 		break;
 	case DOUBLECLICK:
-		gpioWrite(PIN_LED_GREEN, HIGH);
-		gpioWrite(PIN_LED_RED, LOW);
-		gpioWrite(PIN_LED_BLUE, LOW);
+		ledOn(PINK);
 		break;
 	case CLICKHOLD:
-		gpioWrite(PIN_LED_GREEN, LOW);
-		gpioWrite(PIN_LED_RED, HIGH);
-		gpioWrite(PIN_LED_BLUE, LOW);
+		ledOn(CYAN);
 		break;
 	default:
+		ledOn(WHITE);
 		break;
 
 	}

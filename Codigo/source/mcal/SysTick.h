@@ -19,7 +19,7 @@
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 
-#define SYSTICK_ISR_FREQUENCY_HZ 1000U
+#define SYSTICK_ISR_FREQUENCY_HZ 1000U // Frecuencia de la ISR del SysTick (en Hz) - 1000U para 1 ms
 
 #define PISR_CANT 8
 

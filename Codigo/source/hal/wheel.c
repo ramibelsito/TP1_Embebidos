@@ -1,6 +1,6 @@
 #include "mcal/gpio.h"
 
-#include "mcal/board.h"
+#include "board.h"
 #include "hal/wheel.h"
 #include "mcal/SysTick.h"
 
@@ -10,19 +10,23 @@
 
 #define TWO_BIT_MASK 	0x03
 
-uint8_t clickCounter = 0;
-bool wheelInputFlag;
-
-uint8_t validPrev = 2;
-
-
-uint8_t dir = LEFTTURN;
+#define CLICKHOLDTIME 250
+#define DOUBLECLICKTIME 200
+#define CLICKENABLETIME 100
 
 enum
 {
 	FIRSTC,
 	SECONDC,
 	THIRDC
+};
+
+enum 
+{
+    NOTCLICK,
+    INCLICK,
+    X2CLICK,
+    IN2CLICK
 };
 
 
@@ -36,11 +40,13 @@ typedef union {
     };
 } encoder_t;
 
-encoder_t encoderData[BUFFER_SIZE];
+// Variables Globales (de verdad)
+bool wheelInputFlag;
 
-uint32_t idx = 0;		// Global idx to move through encoderData
-uint8_t move = 0;
-
+// variables globales del archivo
+static encoder_t encoderData[BUFFER_SIZE];
+static uint32_t idx = 0;		// Global idx to move through encoderData
+static uint32_t timeCounter = 0;
 
 
 
@@ -80,7 +86,8 @@ void wheelReadGPIO(void) {
 	if(idx > BUFFER_SIZE - 1) {			// idx lives between 0 and 19
 		idx = idx % BUFFER_SIZE;
 	}
-	clickCounter += 1;
+	timeCounter += 1;
+
 }
 
 
@@ -88,9 +95,9 @@ void wheelReadGPIO(void) {
 
 uint32_t readWheel(void)
 {
-	static uint8_t clickState = 0;
-
-
+    static uint32_t clickState = 0;
+    clickState = !encoderData[idx].rchd;
+    static uint32_t pressState = IDLE;
 
     static uint8_t prev = 0;
     static int8_t acc = 0;
@@ -127,39 +134,79 @@ uint32_t readWheel(void)
         acc = 0;
         return LEFTTURN;
     }
+    if (timeCounter < CLICKENABLETIME)
+    {
 
-    if (!encoderData[idx].rchd && !clickState)
-    {
-    	clickState = 1;
-    	clickCounter = 0;
-				}
-    else if (!encoderData[idx].rchd && clickState == 1 && clickCounter > 300)
-    {
-    	clickState = 0;
-    	return CLICKHOLD;
     }
-    else if (encoderData[idx].rchd && clickState == 1 && clickCounter < 100)
-    {
-    	clickCounter = 0;
-    	clickState = 2;
+    else
+	{
+		switch (pressState)
+		{
+			default:
+			case NOTCLICK:
+				if (clickState == 1)
+				{
+					pressState = INCLICK;
+					timeCounter = 0;
 				}
-    else if (encoderData[idx].rchd && clickState == 2 && clickCounter > 200)
-    {
-    	clickState = 0;
-    	return CLICK;
+				else {
+					pressState = NOTCLICK;
 				}
-    else if (!encoderData[idx].rchd && clickState == 2 && clickCounter < 200)
-    {
-    	clickState = 3;
+				break;
+			case INCLICK:
+				if (clickState == 1)
+				{
+					pressState = INCLICK;
 				}
-    else if (encoderData[idx].rchd && clickState == 3)
-    {
-    	clickState = 0;
-    	return DOUBLECLICK;
+				else
+				{
+					if (timeCounter >= CLICKHOLDTIME)
+					{
+						pressState = NOTCLICK;
+						timeCounter = 0;
+						return CLICKHOLD;
+					}
+					else
+					{
+						pressState = X2CLICK;
+						timeCounter = 0;
+					}
+				}
+				break;
+			case X2CLICK:
+				if (clickState == 0 && timeCounter <= DOUBLECLICKTIME)
+				{
+					pressState = X2CLICK;
+				}
+				else if (clickState == 0 && timeCounter > DOUBLECLICKTIME)
+				{
+					pressState = NOTCLICK;
+					timeCounter = 0;
+					return CLICK;
+				}
+				else if (clickState == 1 && timeCounter <= DOUBLECLICKTIME)
+				{
+					pressState = IN2CLICK;
+					timeCounter = 0;
+				}
+				break;
+			case IN2CLICK:
+				if (clickState == 1)
+				{
+					pressState = IN2CLICK;
+				}
+				else
+				{
+					pressState = NOTCLICK;
+					timeCounter = 0;
+					return DOUBLECLICK;
+				}
+				break;
+		}
 	}
-	else {
-		return IDLE;
-	}
+
+	return IDLE;
+
 }
 
 

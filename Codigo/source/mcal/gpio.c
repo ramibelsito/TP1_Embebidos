@@ -1,6 +1,5 @@
 #include "gpio.h"
 #include "hardware.h"
-#include "hal/board.h"
 typedef enum
 {
 	PORT_mAnalog,
