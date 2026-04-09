@@ -95,11 +95,11 @@ void gpioToggle (pin_t pin);
  */
 bool gpioRead (pin_t pin);
 
-void init_nvic(void);
-void testInterruptSW2(pin_t pin);
 void fallingEdgeIRQC(pin_t pin);
-void PORT_IRQHANDLER(void);
+void risingEdgeIRQC(pin_t pin);
+void gpioPullUp(pin_t pin);
 
+void cleanFlags(pin_t pin);
 /*******************************************************************************
  ******************************************************************************/
 

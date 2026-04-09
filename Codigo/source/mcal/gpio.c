@@ -119,26 +119,59 @@ void fallingEdgeIRQC(pin_t pin) {
 	uint8_t port = PIN2PORT(pin);
 	uint8_t number = PIN2NUM(pin);
 
-	pPorts[port]->PCR[number] |= PORT_PCR_IRQC(0b1010); // interrupción por falling edge
+	pPorts[port]->PCR[number] &= ~PORT_PCR_IRQC_MASK;   // limpiar IRQC previo
+	pPorts[port]->PCR[number] |= PORT_PCR_IRQC(0b1010); // falling edge
 }
 
-void init_nvic(void) {
-    NVIC_EnableIRQ(PORTC_IRQn);        // habilita interrupciones del PORTC
-    NVIC_SetPriority(PORTC_IRQn, 3);   // prioridad cualquiera
+void risingEdgeIRQC(pin_t pin)
+{
+    uint8_t port = PIN2PORT(pin);
+    uint8_t number = PIN2NUM(pin);
+
+    // Limpiar campo IRQC
+    pPorts[port]->PCR[number] &= ~PORT_PCR_IRQC_MASK;
+
+    // Configurar rising edge
+    pPorts[port]->PCR[number] |= PORT_PCR_IRQC(0b1001);
+}
+
+void gpioPullUp(pin_t pin)
+{
+    uint8_t port = PIN2PORT(pin);
+    uint8_t number = PIN2NUM(pin);
+
+    pPorts[port]->PCR[number] |= PORT_PCR_PE_MASK | PORT_PCR_PS_MASK;
 }
 
 
-/* ---------------- INTERRUPT HANDLER: PORTC ---------------- */
-void PORTC_IRQHandler(void) {
+void cleanFlags(pin_t pin)
+{
+	uint8_t port = PIN2PORT(pin);
+	uint8_t number = PIN2NUM(pin);
 
-    // limpia el flag de interrupción del pin C6
-    PORTC->ISFR = (1 << 6);
+	switch(port)
+	{
+	case PA:
+			// Limpiar flags pendientes antes de habilitar NVIC
+			PORTA->ISFR |= (1 << number);
+			break;
+	case PB:
+			// Limpiar flags pendientes antes de habilitar NVIC
+		    PORTB->ISFR |= (1 << number);
+		    break;
+	default:
+	case PC:
+			// Limpiar flags pendientes antes de habilitar NVIC
+		    PORTC->ISFR |= (1 << number);
+		    break;
+	case PD:
+			// Limpiar flags pendientes antes de habilitar NVIC
+		    PORTD->ISFR |= (1 << number);
+		    break;
+	case PE:
+			// Limpiar flags pendientes antes de habilitar NVIC
+		    PORTE->ISFR |= (1 << number);
+		    break;
 
-    // toggle del LED rojo
-    PTB->PTOR = (1 << 22);
-}
-
-/* Función para testear las interrupciones de GPIO*/
-void testInterruptSW2(pin_t pin) {
-	fallingEdgeIRQC(pin);
+	}
 }

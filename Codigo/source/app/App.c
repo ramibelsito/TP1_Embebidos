@@ -20,7 +20,7 @@
 #include "mcal/gpio.h"
 #include "hal/board.h"
 #include "mcal/SysTick.h"
-
+#include "hal/card.h"
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -76,11 +76,19 @@ void App_Init (void)
 	{
 		ledOn(RED);
 	}
+	if (!cardInit()){
+		ledOn(RED);
+	}
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
+	if(!gpioRead(PIN_ENABLE_DATA))
+	{
+		//ledOn(GREEN);
+	}
+	/*
 	uint32_t result = readWheel();
 	switch (result)
 	{
@@ -91,10 +99,10 @@ void App_Run (void)
 		ledOn(RED);
 		break;
 	case IDLE:
-
+		vez = 0;
 		break;
 	case CLICK:
-		ledOn(YELLOW);
+		ledOff(WHITE);
 		break;
 	case DOUBLECLICK:
 		ledOn(PINK);
@@ -106,7 +114,7 @@ void App_Run (void)
 		ledOn(WHITE);
 		break;
 
-	}
+	}*/
 
 }
 

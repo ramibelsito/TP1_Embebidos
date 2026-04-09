@@ -37,9 +37,18 @@
 #define SW_ACTIVE       LOW // 
 #define SW_INPUT_TYPE   BOOL // 
 
+/**** Encoder defines **********************************************************/
 #define PIN_RCHA		PORTNUM2PIN(PA,2)
 #define PIN_RCHB		PORTNUM2PIN(PC,2)
 #define PIN_RCHD		PORTNUM2PIN(PC,3)
+
+
+/***** CARD defines **********************************************************/
+
+#define PIN_CARD_CLOCK    PORTNUM2PIN(PC, 5)   // Setear pinout de la placa
+#define PIN_CARD_DATA     PORTNUM2PIN(PC, 0)  // Setear pinout de la placa
+#define PIN_ENABLE_DATA   PORTNUM2PIN(PC, 1)  // Setear pinout de la placa
+
 
 /*******************************************************************************
  ******************************************************************************/
