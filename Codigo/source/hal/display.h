@@ -4,24 +4,45 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-bool writeSegment(uint8_t segment, uint8_t digit, uint32_t dutyPercentage);
+void initDisplay();
+void setDutyPercentage(uint8_t percentage);
+
+/**
+ * @param segments
+ * 8-bit mask representing the state of each segment.
+ * Each bit corresponds to one segment in the display:
+ *
+ *   Bit 0 (LSB) → segment 'a'
+ *   Bit 1       → segment 'b'
+ *   Bit 2       → segment 'c'
+ *   Bit 3       → segment 'd'
+ *   Bit 4       → segment 'e'
+ *   Bit 5       → segment 'f'
+ *   Bit 6       → segment 'g'
+ *   Bit 7 (MSB) → decimal point (dp)
+ *
+ * A bit value of 1 turns the corresponding segment ON, while 0 turns it OFF.
+ *
+ * @param digit
+ * Index of the digit to update
+ *
+ * @param dutyPercentage
+ * Brightness control expressed as a percentage (0–100).
+ *
+ * @return true if the segments were successfully written,
+ *         false otherwise (e.g., invalid digit index or hardware error).
+ */
+bool writeSegments(uint8_t segments, uint8_t digit);
 
 // Writes 1 number in the specified digit
-bool writeNumber(uint8_t number, uint8_t digit, uint32_t dutyPercentage);
+bool writeNumber(uint8_t number, uint8_t digit);
 
 // Writes number ands slides number if needed
-bool displayNumber(uint32_t number, uint32_t dutyPercentage);
+bool writeString(const char* string, uint8_t slideDelay);
 
-bool cleanDisplay(void);
-
-bool cleanSegment(uint8_t segment, uint8_t digit);
-
-bool cleanNumber(uint8_t digit);
+void cleanDisplay(void);
 
 // Writes string
 // bool displayStr(str * word);
 
 #endif // _DISPLAY_H_
-
-
-
