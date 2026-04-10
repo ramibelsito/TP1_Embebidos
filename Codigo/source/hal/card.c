@@ -5,17 +5,45 @@
 #include "hardware.h"
 #include "hal/IRQN_Ports.h"
 
-#define CARD_MAX_BITS      256
-#define CARD_MAX_CHARS     64
+#define CARD_MAX_BITS      320
+#define CARD_MAX_CHARS     40
 #define CARD_TIMEOUT_MS    50   
 
+// Se puede acceder al char completo como x.fields.truchar.raw o podes acceder bit a bit como x.fields.truchar.bit.b0
+// Hay que agregar al union una forma de acceder solo al bit paridad y solo a los 4 bits de caracter
+typedef union
+{
+    uint8_t raw;
+    struct
+    {
+        union
+        {
+            uint8_t raw : 5;
+            struct
+            {
+                uint8_t b0 : 1;
+                uint8_t b1 : 1;
+                uint8_t b2 : 1;
+                uint8_t b3 : 1;
+                uint8_t b4 : 1;
+            } bit;
+        } truchar;
+        uint8_t free : 3;
+    } fields;
+} truchar_t;
+
+
+
+#define SS 0x1F // Start Sentinel ';' -> 0b11111
+#define ES 0x1E // End Sentinel '?' -> 0b11110
+#define FS 0x1D // Field Separator '=' -> 0b11101
 
 // Variables internas
-static volatile uint8_t bitBuffer[CARD_MAX_BITS];
+static volatile truchar_t bitBuffer[CARD_MAX_CHARS];
 static volatile uint16_t bitCount = 0;
 volatile bool cardDataReady = false;            // True cuando se terminar de recibir los bits -> Activa el procesamiento processBuffer()
 volatile uint32_t lastBitTime = 0;              // Dato para determinar timeout en la recepcion de los datos de una tarjeta
-
+char id[8];
 uint32_t timeoutCounter = 0;                    // Suma cada vez que entra al pisr. Compara con lastBitTime
 
 static volatile bool receiving = false;         // True cuando detecta el flanco de enable de la tarjeta
@@ -117,8 +145,27 @@ void cardHandler(void)
         if (bitCount < CARD_MAX_BITS)
         {
             lastBitTime = timeoutCounter;             // Actualiza el tiempo del último dato
-            uint8_t bit = gpioRead(PIN_CARD_DATA);
-            bitBuffer[bitCount++] = bit;
+            bool bit = gpioRead(PIN_CARD_DATA);
+            uint8_t idx = (uint8_t)(bitCount % 5);
+            switch (idx)
+            {
+                case 0:
+                    bitBuffer[(uint8_t)(bitCount/5)].fields.truchar.bit.b0 = bit;
+                    break;
+                case 1:
+                    bitBuffer[(uint8_t)(bitCount/5)].fields.truchar.bit.b1 = bit;
+                    break;
+                case 2:
+                    bitBuffer[(uint8_t)(bitCount/5)].fields.truchar.bit.b2 = bit;
+                    break;
+                case 3:
+                    bitBuffer[(uint8_t)(bitCount/5)].fields.truchar.bit.b3 = bit;
+                    break;
+                case 4:
+                    bitBuffer[(uint8_t)(bitCount/5)].fields.truchar.bit.b4 = bit;
+                    break;
+            }
+            bitCount++;
         }
         else
         {
@@ -135,6 +182,47 @@ void cardHandler(void)
 // PROCESAMIENTO
 // ==========================================================
 
+// Encuentra el StartSentinel, el EndSentinel y traduce a los caracteres correspondientes los bits intermedios. Corroborar paridad.
+// Setea el string id
+void processIdData(truchar_t bitBuffer[])
+{
+    bool SSFound = false;
+    bool FSFound = false;
+    uint8_t SSPos = 0;
+    uint8_t FSPos = 0;
+    uint8_t i = 0;
+    
+    while ( bitBuffer[i].raw != ES)
+    {
+        if (bitBuffer[i].raw == SS)
+        {
+            SSFound = true;
+            SSPos = i;
+        }
+        if (bitBuffer[i].raw == FS)
+        {
+            FSFound = true;
+            FSPos = i;
+        }
+        if (SSFound)
+        {
+            
+            i++; // Sale apuntando a LRC
+        }
+    }
+    uint8_t lrcPos = i;
+    // Corroborar Paridad Horizontal --> si sale mal retornar un string vacio
+
+    // Corroborar Paridad Vertical (LRC) --> si sale mal retornar un string vacio 
+
+    // Traducir a caracteres --> si sale mal retornar un string vacio
+    // Va a agregarlos a id --> id[0] = bitBuffer[SSPos+1].fields.truchar.char hasta id[7] = bitBuffer[SSPos+8].fields.truchar.char
+
+
+
+
+}
+/*
 static void processBuffer(void) {
     uint8_t decoded[CARD_MAX_BITS];
     int decodedLen = decodeF2F((uint8_t*)bitBuffer, bitCount, decoded);
@@ -340,3 +428,4 @@ uint32_t cardRead(void)
     return lastCard;                // Devuelve el último Id calculado
 }
 
+*/
