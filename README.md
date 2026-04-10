@@ -3,10 +3,8 @@ Control de Acceso Mediante Tarjeta Magnética
 
 ## ToDoList
  
- 1. Actualizar SysTick para multiples interrupciones periódicas
- 2. Comprobar Funcionamiento de Gpio.c
- 3. Codigo Prueba que lea el input de la ruedita. Poder detectar click para adelante y para atras.
- 4. Codigos Genericos: 
-	 1. Ver como se le envian los valores al display
-	 2. Definir .h desde app.h para abajo con los requisitos de cada función deseada
-	 3. Comparación de Strings
+ 1. Hacer la lógica para leer y procesar los datos de la tarjeta
+ 2. Terminar el driver del Display
+ 3. Organizar manejo de usuarios
+ 4. Hacer FSM General
+ 5. Terminar App
