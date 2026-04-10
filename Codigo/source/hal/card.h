@@ -3,14 +3,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+
+
+// Initializes the card reader driver
 bool cardInit(void);
 
-bool cardDisable(void);
+// Returns if cardData is ready
+bool cardAvailable(void);
 
-bool cardEnable(void);
-
-// 1 -> if new card has been read
-extern bool cardReadFlag;
+// Calls processBuffer() to process all buffer data when app needs it
+void processCardData(void);
 
 // Returns last card read
 uint32_t cardRead(void);
