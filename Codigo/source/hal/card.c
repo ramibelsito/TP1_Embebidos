@@ -31,9 +31,9 @@ typedef union
 } truchar_t;
 
 
-#define SS 0x1F // Start Sentinel ';' -> 0b11111
-#define ES 0x1E // End Sentinel '?' -> 0b11110
-#define FS 0x1D // Field Separator '=' -> 0b11101
+#define SS 0b01011 // Start Sentinel ';' 
+#define ES 0b11111 // End Sentinel '?'    
+#define FS 0b01101 // Field Separator '=' 
 
 // Variables internas
 static volatile truchar_t bitBuffer[CARD_MAX_CHARS];
@@ -45,18 +45,16 @@ static volatile bool receiving = false;         // True cuando detecta el flanco
 static bool cardReadFlag = false;                      // True cuando ya se tiene el ID (ya termino de procesar processBuffer())
 
 
-
-
-
-
 char id[8];
 static uint32_t lastCard = 0;
 
 
 // LOCAL FUNCTIONS
-void processIdData(void);
+static void processIdData(void);
 static void checkTimeout(void);
-uint8_t get_char_from_bits(truchar_t t);
+static uint8_t get_char_from_bits(truchar_t t);
+static uint8_t make_char(uint8_t value4bits);
+static void cleanBuffer(void);
 static uint32_t calculateIdNumber(void);
 
 // HANDLERS & CALLBACKS
@@ -67,6 +65,8 @@ void cardHandler(void);
 // INIT
 // ==========================================================
 
+// Inicializa los pines vinculados al lector de tarjetas
+// Devuelve true si inicializa correctamente
 bool cardInit(void)
 {
     if (!gpioInit(PIN_CARD_CLOCK)) {
@@ -192,12 +192,15 @@ void cardHandler(void)
 
 // Encuentra el StartSentinel, el EndSentinel y traduce a los caracteres correspondientes los bits intermedios. Corroborar paridad.
 // Setea el string id
-void processIdData(void)
+static void processIdData(void)
 {
     bool SSFound = false;
     bool FSFound = false;
     uint8_t SSPos = 0;
     uint8_t FSPos = 0;
+    uint8_t ESPos = 0;
+    uint8_t LRCPos = 0;
+
     uint8_t i = 0;
     
     while ( bitBuffer[i].fields.truchar.raw != ES)
@@ -214,24 +217,29 @@ void processIdData(void)
         }
         if (SSFound)
         {
-            
             i++; // Sale apuntando a LRC
         }
     }
-    uint8_t lrcPos = i;
+    ESPos = i;
+    LRCPos = ESPos+1;       // LRC viene siempre despues de ES
+
+                                 
     // Corroborar Paridad Horizontal
     i = 1;
     uint8_t count = 0;
-
-
+                                        
     while ( bitBuffer[SSPos+i].fields.truchar.raw != ES ) {
         count = bitBuffer[SSPos+i].fields.truchar.bit.b1
                     + bitBuffer[SSPos+i].fields.truchar.bit.b2
                     + bitBuffer[SSPos+i].fields.truchar.bit.b3
                     + bitBuffer[SSPos+i].fields.truchar.bit.b4;
 
-        if (!(count % 2 == 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 1)) {
-            return;                                                              // Detecta error --> Sale de la función
+        // printf("Dígito %u: Count = %u, Paridad = %u \n", i,count,bitBuffer[SSPos+i].fields.truchar.bit.b0);
+        
+        if (!((count % 2 == 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 1) || 
+            (count % 2 != 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 0))) {
+            
+            return;         // Detecta error --> Sale de la función
         }
         i++;
     }
@@ -240,29 +248,40 @@ void processIdData(void)
     i = 0;
     count = 0;
     uint8_t j = 0;
+    uint8_t lrc = get_char_from_bits(bitBuffer[LRCPos]);
+
     // LRC tiene una longitud de 4 bits
     while (i < 4) {
-        while ( bitBuffer[SSPos+j].fields.truchar.raw != ES ) {
-            count += bitBuffer[SSPos+j].fields.truchar.raw & (1 << i);         // Si vale uno se suma el contador de unos.
+        // printf("\n i: %u, j: %u, Count: %u \n", i, j, count);
+
+        while ( bitBuffer[SSPos+j].fields.truchar.raw != lrc ) {
+            // printf("%u,", bitBuffer[SSPos+j].fields.truchar.raw & (1 << i));
+            count += (bitBuffer[SSPos+j].fields.truchar.raw >> i) & 1;         // Si vale uno se suma el contador de unos.
             j++;
         }
-        if (!(count % 2 == 0 && (bitBuffer[lrcPos].fields.truchar.raw & (1 << i)) == 1)) {
-            return;                                                              // Detecta error --> Sale de la función
+
+        if (!((count % 2 == 0 && ((bitBuffer[SSPos+j].fields.truchar.raw >> i) & 1) == 1) ||
+            (count % 2 != 0 && ((bitBuffer[SSPos+j].fields.truchar.raw >> i) & 1) == 0))) {
+            return;                      // Detecta error --> Sale de la función
         }
         i++;
         j = 0;
         count = 0;
     }
 
+
     // Traducir a caracteres --> si sale mal retornar un string vacio
     // Va a agregarlos a id --> id[0] = bitBuffer[SSPos+1].fields.truchar.char hasta id[7] = bitBuffer[SSPos+8].fields.truchar.char
+
+    uint8_t value4bits;
     for (int j = 0 ; j < sizeof(id)/sizeof(id[0]) ; j++) {
-        id[j] = get_char_from_bits(bitBuffer[SSPos+j]);
+        value4bits = get_char_from_bits(bitBuffer[SSPos+j+1]);
+        id[j] = make_char(value4bits);
     }
 }
 
 // calcula el char para los chunks de 5 bits por caracter leídos
-uint8_t get_char_from_bits(truchar_t t) {
+static uint8_t get_char_from_bits(truchar_t t) {
     uint8_t r = t.fields.truchar.raw;  // b0...b4 (b0 más significativo === Paridad)
     uint8_t val = 0;
 
@@ -274,13 +293,22 @@ uint8_t get_char_from_bits(truchar_t t) {
     return val;   // char formado por b1..b4 (4 bits)
 }
 
+// Convierte un número de 4 bits en char
+static uint8_t make_char(uint8_t value4bits)
+{
+    // value4 debe estar entre 0 y 9
+    if (value4bits > 9)
+        return '?';   // error o carácter inválido
+
+    return '0' + value4bits;
+}
 
 
 // Limpia el buffer para la próxima lectura. De esta forma nos aseguramos que no tenga data basura de antes
-// Se llama a esta función uego de procesar el id de la tarjeta leída
-void cleanBuffer(void) {
+// Se llama a esta función luego de procesar el id de la tarjeta leída
+static void cleanBuffer(void) {
     for (int i = 0 ; sizeof(bitBuffer)/sizeof(bitBuffer[0]) ; i++) {
-        bitBuffer[i].raw = 0x00;
+        bitBuffer[i].fields.truchar.raw = 0x00;
     }
 }
 
@@ -341,6 +369,9 @@ void processCardData(void) {
         cardDataReady = false;
     }
     lastCard = calculateIdNumber();     // Actualiza lastCard con el valor de id de la tarjeta procesada
+
+    // Limpiar el buffer
+    cleanBuffer();
 
     cardReadFlag = true;                // Ya se proceso la data de la tarjeta
 }
