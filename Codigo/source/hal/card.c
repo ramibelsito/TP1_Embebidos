@@ -30,9 +30,9 @@ typedef union
 } truchar_t;
 
 
-#define SS 0x1F // Start Sentinel ';' -> 0b11111
-#define ES 0x1E // End Sentinel '?' -> 0b11110
-#define FS 0x1D // Field Separator '=' -> 0b11101
+#define SS 0b01011 // Start Sentinel ';' 
+#define ES 0b11111 // End Sentinel '?'    
+#define FS 0b01101 // Field Separator '=' 
 
 // Variables internas
 static volatile truchar_t bitBuffer[CARD_MAX_CHARS];
@@ -56,6 +56,7 @@ static uint32_t lastCard = 0;
 void processIdData(void);
 static void checkTimeout(void);
 uint8_t get_char_from_bits(truchar_t t);
+uint8_t make_char(uint8_t value4bits);
 static uint32_t calculateIdNumber(void);
 
 // HANDLERS & CALLBACKS
@@ -197,6 +198,9 @@ void processIdData(void)
     bool FSFound = false;
     uint8_t SSPos = 0;
     uint8_t FSPos = 0;
+    uint8_t ESPos = 0;
+    uint8_t LRCPos = 0;
+
     uint8_t i = 0;
     
     while ( bitBuffer[i].fields.truchar.raw != ES)
@@ -213,24 +217,29 @@ void processIdData(void)
         }
         if (SSFound)
         {
-            
             i++; // Sale apuntando a LRC
         }
     }
-    uint8_t lrcPos = i;
+    ESPos = i;
+    LRCPos = ESPos+1;       // LRC viene siempre despues de ES
+
+                                 
     // Corroborar Paridad Horizontal
     i = 1;
     uint8_t count = 0;
-
-
+                                        
     while ( bitBuffer[SSPos+i].fields.truchar.raw != ES ) {
         count = bitBuffer[SSPos+i].fields.truchar.bit.b1
                     + bitBuffer[SSPos+i].fields.truchar.bit.b2
                     + bitBuffer[SSPos+i].fields.truchar.bit.b3
                     + bitBuffer[SSPos+i].fields.truchar.bit.b4;
 
-        if (!(count % 2 == 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 1)) {
-            return;                                                              // Detecta error --> Sale de la función
+        // printf("Dígito %u: Count = %u, Paridad = %u \n", i,count,bitBuffer[SSPos+i].fields.truchar.bit.b0);
+        
+        if (!((count % 2 == 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 1) || 
+            (count % 2 != 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 0))) {
+            
+            return;         // Detecta error --> Sale de la función
         }
         i++;
     }
@@ -239,24 +248,35 @@ void processIdData(void)
     i = 0;
     count = 0;
     uint8_t j = 0;
+    uint8_t lrc = get_char_from_bits(bitBuffer[LRCPos]);
+
     // LRC tiene una longitud de 4 bits
     while (i < 4) {
-        while ( bitBuffer[SSPos+j].fields.truchar.raw != ES ) {
-            count += bitBuffer[SSPos+j].fields.truchar.raw & (1 << i);         // Si vale uno se suma el contador de unos.
+        // printf("\n i: %u, j: %u, Count: %u \n", i, j, count);
+
+        while ( bitBuffer[SSPos+j].fields.truchar.raw != lrc ) {
+            // printf("%u,", bitBuffer[SSPos+j].fields.truchar.raw & (1 << i));
+            count += (bitBuffer[SSPos+j].fields.truchar.raw >> i) & 1;         // Si vale uno se suma el contador de unos.
             j++;
         }
-        if (!(count % 2 == 0 && (bitBuffer[lrcPos].fields.truchar.raw & (1 << i)) == 1)) {
-            return;                                                              // Detecta error --> Sale de la función
+
+        if (!((count % 2 == 0 && ((bitBuffer[SSPos+j].fields.truchar.raw >> i) & 1) == 1) ||
+            (count % 2 != 0 && ((bitBuffer[SSPos+j].fields.truchar.raw >> i) & 1) == 0))) {
+            return;                      // Detecta error --> Sale de la función
         }
         i++;
         j = 0;
         count = 0;
     }
 
+
     // Traducir a caracteres --> si sale mal retornar un string vacio
     // Va a agregarlos a id --> id[0] = bitBuffer[SSPos+1].fields.truchar.char hasta id[7] = bitBuffer[SSPos+8].fields.truchar.char
+
+    uint8_t value4bits;
     for (int j = 0 ; j < sizeof(id)/sizeof(id[0]) ; j++) {
-        id[j] = get_char_from_bits(bitBuffer[SSPos+j]);
+        value4bits = get_char_from_bits(bitBuffer[SSPos+j+1]);
+        id[j] = make_char(value4bits);
     }
 }
 
@@ -273,6 +293,15 @@ uint8_t get_char_from_bits(truchar_t t) {
     return val;   // char formado por b1..b4 (4 bits)
 }
 
+// Convierte un número de 4 bits en char
+uint8_t make_char(uint8_t value4bits)
+{
+    // value4 debe estar entre 0 y 9
+    if (value4bits > 9)
+        return '?';   // error o carácter inválido
+
+    return '0' + value4bits;
+}
 
 
 // Limpia el buffer para la próxima lectura. De esta forma nos aseguramos que no tenga data basura de antes
