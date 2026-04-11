@@ -44,19 +44,16 @@ static volatile bool receiving = false;         // True cuando detecta el flanco
 static bool cardReadFlag = false;                      // True cuando ya se tiene el ID (ya termino de procesar processBuffer())
 
 
-
-
-
-
 char id[8];
 static uint32_t lastCard = 0;
 
 
 // LOCAL FUNCTIONS
-void processIdData(void);
+static void processIdData(void);
 static void checkTimeout(void);
-uint8_t get_char_from_bits(truchar_t t);
-uint8_t make_char(uint8_t value4bits);
+static uint8_t get_char_from_bits(truchar_t t);
+static uint8_t make_char(uint8_t value4bits);
+static void cleanBuffer(void);
 static uint32_t calculateIdNumber(void);
 
 // HANDLERS & CALLBACKS
@@ -67,6 +64,8 @@ void cardHandler(void);
 // INIT
 // ==========================================================
 
+// Inicializa los pines vinculados al lector de tarjetas
+// Devuelve true si inicializa correctamente
 bool cardInit(void)
 {
     if (!gpioInit(PIN_CARD_CLOCK)) {
@@ -192,7 +191,7 @@ void cardHandler(void)
 
 // Encuentra el StartSentinel, el EndSentinel y traduce a los caracteres correspondientes los bits intermedios. Corroborar paridad.
 // Setea el string id
-void processIdData(void)
+static void processIdData(void)
 {
     bool SSFound = false;
     bool FSFound = false;
@@ -281,7 +280,7 @@ void processIdData(void)
 }
 
 // calcula el char para los chunks de 5 bits por caracter leídos
-uint8_t get_char_from_bits(truchar_t t) {
+static uint8_t get_char_from_bits(truchar_t t) {
     uint8_t r = t.fields.truchar.raw;  // b0...b4 (b0 más significativo === Paridad)
     uint8_t val = 0;
 
@@ -294,7 +293,7 @@ uint8_t get_char_from_bits(truchar_t t) {
 }
 
 // Convierte un número de 4 bits en char
-uint8_t make_char(uint8_t value4bits)
+static uint8_t make_char(uint8_t value4bits)
 {
     // value4 debe estar entre 0 y 9
     if (value4bits > 9)
@@ -305,10 +304,10 @@ uint8_t make_char(uint8_t value4bits)
 
 
 // Limpia el buffer para la próxima lectura. De esta forma nos aseguramos que no tenga data basura de antes
-// Se llama a esta función uego de procesar el id de la tarjeta leída
-void cleanBuffer(void) {
+// Se llama a esta función luego de procesar el id de la tarjeta leída
+static void cleanBuffer(void) {
     for (int i = 0 ; sizeof(bitBuffer)/sizeof(bitBuffer[0]) ; i++) {
-        bitBuffer[i].raw = 0x00;
+        bitBuffer[i].fields.truchar.raw = 0x00;
     }
 }
 
@@ -369,6 +368,9 @@ void processCardData(void) {
         cardDataReady = false;
     }
     lastCard = calculateIdNumber();     // Actualiza lastCard con el valor de id de la tarjeta procesada
+
+    // Limpiar el buffer
+    cleanBuffer();
 
     cardReadFlag = true;                // Ya se proceso la data de la tarjeta
 }
