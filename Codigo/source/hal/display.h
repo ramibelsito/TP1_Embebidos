@@ -34,15 +34,40 @@ void setDutyPercentage(uint8_t percentage);
  */
 bool writeSegments(uint8_t segments, uint8_t digit);
 
-// Writes 1 number in the specified digit
-bool writeNumber(uint8_t number, uint8_t digit);
+/**
+ * @brief Writes one character to the specified digit.
+ *
+ * @param character Character to write to display
+ * Valid characters are:
+ *    A-Z (uppercase)
+ *    0-9
+ *    ' ' (white space)
+ *    '-' (score)
+ *    '.' (decimal point)
+ *
+ * @param digit Index of the display digit to write the character to.
+ *
+ * @param blink Defines whether the character will blink or no.
+ */
+bool writeCharacter(char character, uint8_t digit, bool blink);
 
-// Writes number ands slides number if needed
-bool writeString(const char* string, uint8_t slideDelay);
+/**
+ * @brief Writes a string of upto 50 characters to the display and cycles the text to fit
+ * in the 4 digit display.
+ *
+ * @param string String to write to display
+ * Valid string characters are:
+ *    A-Z (uppercase)
+ *    0-9
+ *    ' ' (white space)
+ *    '-' (score)
+ *    '.' (decimal point)
+ *
+ *  The string will overrite a character written through `writeCharacter`, to make individual
+ *  characters stick you must `cleanDisplay`.
+ */
+void writeString(const char* string);
 
-void cleanDisplay(void);
-
-// Writes string
-// bool displayStr(str * word);
+void cleanDisplay();
 
 #endif // _DISPLAY_H_
