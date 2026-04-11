@@ -3,15 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-enum wheelInput
-{
-	IDLE,
-	RIGHTTURN,
-	LEFTTURN,
-	CLICK,
-	DOUBLECLICK,
-	CLICKHOLD
-};
+typedef enum { IDLE, RIGHTTURN, LEFTTURN, CLICK, DOUBLECLICK, CLICKHOLD } wheel_input_t;
 
 bool wheelInit(void);
 
@@ -19,6 +11,6 @@ bool wheelInit(void);
 extern bool wheelInputFlag;
 
 // Returns input type from wheel
-uint32_t readWheel(void);
+wheel_input_t readWheel(void);
 
 #endif // _WHEEL_H_

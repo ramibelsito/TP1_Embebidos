@@ -93,7 +93,7 @@ void wheelReadGPIO(void) {
 
 
 
-uint32_t readWheel(void)
+wheel_input_t readWheel(void)
 {
     static uint32_t clickState = 0;
     clickState = !encoderData[idx].rchd;
