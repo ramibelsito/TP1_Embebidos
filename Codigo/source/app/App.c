@@ -84,11 +84,11 @@ void App_Init (void)
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
-	if(!gpioRead(PIN_ENABLE_DATA))
-	{
+	//if(!gpioRead(PIN_ENABLE_DATA))
+	//{
 		//ledOn(GREEN);
-	}
-	/*
+	//}
+
 	uint32_t result = readWheel();
 	switch (result)
 	{
@@ -99,10 +99,10 @@ void App_Run (void)
 		ledOn(RED);
 		break;
 	case IDLE:
-		vez = 0;
+		//vez = 0;
 		break;
 	case CLICK:
-		ledOff(WHITE);
+		ledOn(YELLOW);
 		break;
 	case DOUBLECLICK:
 		ledOn(PINK);
@@ -111,10 +111,10 @@ void App_Run (void)
 		ledOn(CYAN);
 		break;
 	default:
-		ledOn(WHITE);
+		//ledOn(WHITE);
 		break;
 
-	}*/
+	}
 
 }
 

@@ -38,16 +38,21 @@
 #define SW_INPUT_TYPE   BOOL // 
 
 /**** Encoder defines **********************************************************/
-#define PIN_RCHA		PORTNUM2PIN(PA,2)
+#define PIN_RCHA		PORTNUM2PIN(PC,3)
 #define PIN_RCHB		PORTNUM2PIN(PC,2)
-#define PIN_RCHD		PORTNUM2PIN(PC,3)
+#define PIN_RCHD		PORTNUM2PIN(PA,2)
 
 
 /***** CARD defines **********************************************************/
 
 #define PIN_CARD_CLOCK    PORTNUM2PIN(PC, 5)   // Setear pinout de la placa
-#define PIN_CARD_DATA     PORTNUM2PIN(PC, 0)  // Setear pinout de la placa
-#define PIN_ENABLE_DATA   PORTNUM2PIN(PC, 1)  // Setear pinout de la placa
+#define PIN_CARD_DATA     PORTNUM2PIN(PC, 1)  // Setear pinout de la placa
+#define PIN_ENABLE_DATA   PORTNUM2PIN(PC, 0)  // Setear pinout de la placa
+
+/***** SHIFT defines **********************************************************/
+#define PIN_SHIFT PORTNUM2PIN(PB, 23) // DATA - SHIFT REGISTER OUTPUT
+#define PIN_CLK PORTNUM2PIN(PB, 9)    // serial clock
+#define PIN_SETOUT PORTNUM2PIN(PA, 1) // latch clock
 
 
 /*******************************************************************************

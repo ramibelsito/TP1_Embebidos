@@ -4,6 +4,7 @@
 #include  "mcal/gpio.h"
 #include "hardware.h"
 #include "hal/IRQN_Ports.h"
+#include "mcal/SysTick.h"
 
 #define CARD_MAX_BITS      320
 #define CARD_MAX_CHARS     40

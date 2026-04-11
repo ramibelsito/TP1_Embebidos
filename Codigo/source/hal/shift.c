@@ -1,10 +1,8 @@
 #include "hal/shift.h"
 #include "mcal/gpio.h"
 #include <stdint.h>
+#include "hal/board.h"
 
-#define PIN_SHIFT PORTNUM2PIN(PB, 23)
-#define PIN_CLK PORTNUM2PIN(PA, 1)    // serial clock
-#define PIN_SETOUT PORTNUM2PIN(PB, 9) // latch clock
 
 #define OUTCANT 16
 
