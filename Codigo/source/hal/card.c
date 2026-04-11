@@ -14,24 +14,20 @@
 typedef union
 {
     uint8_t raw;
-    struct
-    {
-        union
-        {
+    struct {
+        union {
             uint8_t raw : 5;
-            struct
-            {
-                uint8_t b0 : 1;
-                uint8_t b1 : 1;
-                uint8_t b2 : 1;
+            struct {
+                uint8_t b4 : 1;         // LSB
                 uint8_t b3 : 1;
-                uint8_t b4 : 1;
+                uint8_t b2 : 1;
+                uint8_t b1 : 1;
+                uint8_t b0 : 1;         // MSB
             } bit;
         } truchar;
         uint8_t free : 3;
     } fields;
 } truchar_t;
-
 
 
 #define SS 0x1F // Start Sentinel ';' -> 0b11111
@@ -43,21 +39,26 @@ static volatile truchar_t bitBuffer[CARD_MAX_CHARS];
 static volatile uint16_t bitCount = 0;
 volatile bool cardDataReady = false;            // True cuando se terminar de recibir los bits -> Activa el procesamiento processBuffer()
 volatile uint32_t lastBitTime = 0;              // Dato para determinar timeout en la recepcion de los datos de una tarjeta
-char id[8];
 uint32_t timeoutCounter = 0;                    // Suma cada vez que entra al pisr. Compara con lastBitTime
-
 static volatile bool receiving = false;         // True cuando detecta el flanco de enable de la tarjeta
+static bool cardReadFlag = false;                      // True cuando ya se tiene el ID (ya termino de procesar processBuffer())
 
-bool cardReadFlag = false;                      // True cuando ya se tiene el ID (ya termino de procesar processBuffer())
+
+
+
+
+
+char id[8];
 static uint32_t lastCard = 0;
 
 
 // LOCAL FUNCTIONS
-static void processBuffer(void);
-static int decodeF2F(uint8_t *in, uint16_t len, uint8_t *out);
-static bool checkLRC(uint8_t *decoded, int totalChars);
+void processIdData(void);
 static void checkTimeout(void);
+uint8_t get_char_from_bits(truchar_t t);
+static uint32_t calculateIdNumber(void);
 
+// HANDLERS & CALLBACKS
 void timerForTimeout (void);
 void cardHandler(void);
 
@@ -103,15 +104,21 @@ bool cardInit(void)
     return true;
 }
 
+
+// ==========================================================
+// HANDLER & CALLBACKS
+// ==========================================================
+
+// Aumenta su valor a medida que entra el systick. Sirve de referencia para veificar si se pasa un tiempo límite de espera
 void timerForTimeout (void) {
     timeoutCounter++;
 }
 
-
+// Handler para las interrupciones de la tarjeta
 void cardHandler(void)
 {   
 	uint32_t flags = PORTC->ISFR;
-    
+
     // CARD ENABLE DATA (PTC1)
     if (flags & (1 << 1))
     {
@@ -184,7 +191,7 @@ void cardHandler(void)
 
 // Encuentra el StartSentinel, el EndSentinel y traduce a los caracteres correspondientes los bits intermedios. Corroborar paridad.
 // Setea el string id
-void processIdData(truchar_t bitBuffer[])
+void processIdData(void)
 {
     bool SSFound = false;
     bool FSFound = false;
@@ -192,14 +199,14 @@ void processIdData(truchar_t bitBuffer[])
     uint8_t FSPos = 0;
     uint8_t i = 0;
     
-    while ( bitBuffer[i].raw != ES)
+    while ( bitBuffer[i].fields.truchar.raw != ES)
     {
-        if (bitBuffer[i].raw == SS)
+        if (bitBuffer[i].fields.truchar.raw == SS)
         {
             SSFound = true;
             SSPos = i;
         }
-        if (bitBuffer[i].raw == FS)
+        if (bitBuffer[i].fields.truchar.raw == FS)
         {
             FSFound = true;
             FSPos = i;
@@ -211,173 +218,93 @@ void processIdData(truchar_t bitBuffer[])
         }
     }
     uint8_t lrcPos = i;
-    // Corroborar Paridad Horizontal --> si sale mal retornar un string vacio
+    // Corroborar Paridad Horizontal
+    i = 1;
+    uint8_t count = 0;
 
-    // Corroborar Paridad Vertical (LRC) --> si sale mal retornar un string vacio 
+
+    while ( bitBuffer[SSPos+i].fields.truchar.raw != ES ) {
+        count = bitBuffer[SSPos+i].fields.truchar.bit.b1
+                    + bitBuffer[SSPos+i].fields.truchar.bit.b2
+                    + bitBuffer[SSPos+i].fields.truchar.bit.b3
+                    + bitBuffer[SSPos+i].fields.truchar.bit.b4;
+
+        if (!(count % 2 == 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 1)) {
+            return;                                                              // Detecta error --> Sale de la función
+        }
+        i++;
+    }
+
+    // Corroborar Paridad Vertical (LRC) 
+    i = 0;
+    count = 0;
+    uint8_t j = 0;
+    // LRC tiene una longitud de 4 bits
+    while (i < 4) {
+        while ( bitBuffer[SSPos+j].fields.truchar.raw != ES ) {
+            count += bitBuffer[SSPos+j].fields.truchar.raw & (1 << i);         // Si vale uno se suma el contador de unos.
+            j++;
+        }
+        if (!(count % 2 == 0 && (bitBuffer[lrcPos].fields.truchar.raw & (1 << i)) == 1)) {
+            return;                                                              // Detecta error --> Sale de la función
+        }
+        i++;
+        j = 0;
+        count = 0;
+    }
 
     // Traducir a caracteres --> si sale mal retornar un string vacio
     // Va a agregarlos a id --> id[0] = bitBuffer[SSPos+1].fields.truchar.char hasta id[7] = bitBuffer[SSPos+8].fields.truchar.char
-
-
-
-
-}
-/*
-static void processBuffer(void) {
-    uint8_t decoded[CARD_MAX_BITS];
-    int decodedLen = decodeF2F((uint8_t*)bitBuffer, bitCount, decoded);
-
-    if (decodedLen <= 0)
-        return;
-
-    // Validación de longitud
-    if (decodedLen % 5 != 0)
-        return;
-
-    int totalChars = decodedLen / 5;
-
-    if (totalChars < 2) // mínimo: ; ... ? + LRC
-        return;
-
-    // Validar LRC
-    if (!checkLRC(decoded, totalChars))
-        return;
-
-    char chars[CARD_MAX_CHARS];
-    int charCount = 0;
-
-    // Decodificación + PARIDAD
-    for (int i = 0; i < decodedLen; i += 5)
-    {
-        uint8_t val = 0;
-        uint8_t ones = 0;
-
-        for (int j = 0; j < 4; j++)
-        {
-            uint8_t bit = decoded[i + j];
-            val |= (bit << j);
-            if (bit) ones++;
-        }
-
-        uint8_t parity = decoded[i + 4];
-        if (parity) ones++;
-
-        // Paridad impar
-        if ((ones % 2) == 0)
-        {
-            return; // Error
-        }
-
-        char c = val + '0';
-
-        // Validación de caracteres
-        if (!(c >= '0' && c <= '9') &&
-            c != ';' && c != '?' && c != '=')
-        {
-            return;
-        }
-
-        if (charCount >= CARD_MAX_CHARS)
-            return;
-
-        chars[charCount++] = c;
-    }
-
-    // Buscar frame válido
-    int start = -1, end = -1;
-
-    for (int i = 0; i < charCount; i++)
-    {
-        if (chars[i] == ';' && start == -1)
-            start = i;
-
-        if (chars[i] == '?')
-        {
-            end = i;
-            break;
-        }
-    }
-
-    if (start == -1 || end == -1 || end <= start)
-        return;
-
-    // Extraer ID
-    uint32_t id = 0;
-
-    for (int i = start + 1; i < end; i++)
-    {
-        if (chars[i] >= '0' && chars[i] <= '9')
-        {
-            id = id * 10 + (chars[i] - '0');
-        }
-        else if (chars[i] == '=')
-        {
-            break; // fin del PAN
-        }
-        else
-        {
-            return; // carácter inválido dentro del ID
-        }
-    }
-
-    if (id != 0)
-    {
-        lastCard = id;
-        cardReadFlag = true;
+    for (int j = 0 ; j < sizeof(id)/sizeof(id[0]) ; j++) {
+        id[j] = get_char_from_bits(bitBuffer[SSPos+j]);
     }
 }
 
-// ==========================================================
-// DECODIFICACIÓN F2F 
-// ==========================================================
+// calcula el char para los chunks de 5 bits por caracter leídos
+uint8_t get_char_from_bits(truchar_t t) {
+    uint8_t r = t.fields.truchar.raw;  // b0...b4 (b0 más significativo === Paridad)
+    uint8_t val = 0;
 
-static int decodeF2F(uint8_t *in, uint16_t len, uint8_t *out)
-{
-    if (len < 2)
-        return 0;
+    val |= ((r >> 0) & 0x01) << 0;  
+    val |= ((r >> 1) & 0x01) << 1;  
+    val |= ((r >> 2) & 0x01) << 2;  
+    val |= ((r >> 3) & 0x01) << 3;
 
-    int outIndex = 0;
-
-    for (int i = 1; i < len; i++)
-    {
-        // Detecta transición
-        uint8_t transition = (in[i] != in[i - 1]);
-
-        // Transición -> 1
-        // No transición -> 0
-        out[outIndex++] = transition ? 1 : 0;
-    }
-
-    return outIndex;
+    return val;   // char formado por b1..b4 (4 bits)
 }
 
 
-static bool checkLRC(uint8_t *decoded, int totalChars) {
-    uint8_t lrc[5] = {0};
 
-    // XOR columna por columna
-    for (int i = 0; i < totalChars - 1; i++) // excluye LRC
+// Limpia el buffer para la próxima lectura. De esta forma nos aseguramos que no tenga data basura de antes
+// Se llama a esta función uego de procesar el id de la tarjeta leída
+void cleanBuffer(void) {
+    for (int i = 0 ; sizeof(bitBuffer)/sizeof(bitBuffer[0]) ; i++) {
+        bitBuffer[i].raw = 0x00;
+    }
+}
+
+// Calcula el valor numérico del id leído de la tarjeta
+static uint32_t calculateIdNumber(void) {
+    uint32_t value = 0;
+
+    for (int i = 0 ; i < 8 ; i++)
     {
-        for (int j = 0; j < 5; j++)
+        if (id[i] < '0' || id[i] > '9')
         {
-            lrc[j] ^= decoded[i * 5 + j];
+            return 0; // error: caracter no numérico
         }
+
+        value = value * 10 + (id[i] - '0');
     }
 
-    // comparar con LRC recibido (último char)
-    for (int j = 0; j < 5; j++)
-    {
-        if (lrc[j] != decoded[(totalChars - 1) * 5 + j])
-            return false;
-    }
-
-    return true;
+    return value;
 }
 
 // ==========================================================
 // TIMEOUT
 // ==========================================================
 
+// Verifica si sucedio la condición de timeout
 static void checkTimeout(void)
 {
     if (receiving)
@@ -409,11 +336,13 @@ void processCardData(void) {
 
     if (cardDataReady)
     {
-        processBuffer();
+        processIdData();
         cardDataReady = false;
     }
-}
+    lastCard = calculateIdNumber();     // Actualiza lastCard con el valor de id de la tarjeta procesada
 
+    cardReadFlag = true;                // Ya se proceso la data de la tarjeta
+}
 
 
 uint32_t cardRead(void)
@@ -423,9 +352,5 @@ uint32_t cardRead(void)
 
     cardReadFlag = false;           // Limpiar el flag
 
-    processBuffer();                // Procesa los datos y calcula el Id
-
     return lastCard;                // Devuelve el último Id calculado
 }
-
-*/
