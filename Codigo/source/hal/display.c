@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define DIGITS 4
 #define MAX_STR_LEN 50
 // Whitespace padding after string finishes cycling.
 // For example if cycling string "12345" if we had no padding at some

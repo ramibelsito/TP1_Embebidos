@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define DIGITS 4
+
 void initDisplay();
 void setDutyPercentage(uint8_t percentage);
 
