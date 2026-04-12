@@ -46,6 +46,9 @@ void sensor_read(void) {
 }
 */
 
+uint32_t DatosDeCardRead =0;
+uint32_t DatosReales = 60612683;		// SUBE
+
 void App_Init (void)
 {
 	/*if(gpioInit(PIN_LED_RED)) {
@@ -79,16 +82,35 @@ void App_Init (void)
 	if (!cardInit()){
 		ledOn(RED);
 	}
+	ledOff(BLUE);
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void)
 {
-	//if(!gpioRead(PIN_ENABLE_DATA))
-	//{
-		//ledOn(GREEN);
-	//}
+	if (cardAvailable())
+	{
 
+
+		processCardData();
+
+		DatosDeCardRead = cardRead();
+		if (DatosDeCardRead == DatosReales)
+		{
+			//ledToggle(GREEN);
+			DatosDeCardRead = 0;
+
+		}
+		else
+		{
+			//ledToggle(RED);
+		}
+	}
+	else
+	{
+		//
+	}
+	/*
 	uint32_t result = readWheel();
 	switch (result)
 	{
@@ -114,7 +136,7 @@ void App_Run (void)
 		//ledOn(WHITE);
 		break;
 
-	}
+	}*/
 
 }
 

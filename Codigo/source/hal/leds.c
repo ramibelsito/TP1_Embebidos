@@ -84,31 +84,31 @@ bool ledOff(uint8_t color)
 	switch(color)
 	{
 	case RED:
-		gpioWrite(PIN_LED_RED, LOW);
+		gpioWrite(PIN_LED_RED, HIGH);
 		break;
 	case GREEN:
-		gpioWrite(PIN_LED_GREEN, LOW);
+		gpioWrite(PIN_LED_GREEN, HIGH);
 		break;
 	case BLUE:
-		gpioWrite(PIN_LED_BLUE, LOW);
+		gpioWrite(PIN_LED_BLUE, HIGH);
 		break;
 	case CYAN:
-		gpioWrite(PIN_LED_GREEN, LOW);
-		gpioWrite(PIN_LED_BLUE, LOW);
+		gpioWrite(PIN_LED_GREEN, HIGH);
+		gpioWrite(PIN_LED_BLUE, HIGH);
 		break;
 	case PINK:
-		gpioWrite(PIN_LED_RED, LOW);
-		gpioWrite(PIN_LED_BLUE, LOW);
+		gpioWrite(PIN_LED_RED, HIGH);
+		gpioWrite(PIN_LED_BLUE, HIGH);
 		break;
 	case YELLOW:
-		gpioWrite(PIN_LED_GREEN, LOW);
-		gpioWrite(PIN_LED_RED, LOW);
+		gpioWrite(PIN_LED_GREEN, HIGH);
+		gpioWrite(PIN_LED_RED, HIGH);
 		break;
 	case WHITE:
 	default:
-		gpioWrite(PIN_LED_GREEN, LOW);
-		gpioWrite(PIN_LED_RED, LOW);
-		gpioWrite(PIN_LED_BLUE, LOW);
+		gpioWrite(PIN_LED_GREEN, HIGH);
+		gpioWrite(PIN_LED_RED, HIGH);
+		gpioWrite(PIN_LED_BLUE, HIGH);
 		break;
 	}
 	return 0;

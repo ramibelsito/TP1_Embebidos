@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 
+#define CARD_TIMEOUT_MS    50*50*50
 
 // Initializes the card reader driver
 bool cardInit(void);
