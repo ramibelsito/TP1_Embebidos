@@ -10,6 +10,7 @@
 
 #include "app/action.h"
 
+#include "app/display_intensity.h"
 #include "app/id_input.h"
 #include "app/utils.h"
 #include "hal/timers.h"
@@ -84,12 +85,14 @@ typedef enum {
   INITIAL,
   INPUT_ID,
   INPUT_PASS,
+  DISPLAY_INTENSITY,
 } AppState;
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run(void) {
   static AppState appState = INITIAL;
   static char id[ID_LEN] = {0};
+  static char pass[PASS_LEN] = {0};
 
   if (!gpioRead(PIN_ENABLE_DATA)) {
     // ledOn(GREEN);
@@ -98,10 +101,13 @@ void App_Run(void) {
   wheel_input_t result = readWheel();
   switch (appState) {
   case INITIAL:
-    writeString("CLICK TO LOG IN");
+    writeString("CLICK TO LOG IN - DOUBLE CLICK FOR INTENSITY");
     if (result == CLICK) {
       appState = INPUT_ID;
       cleanDisplay();
+    } else if (result == DOUBLECLICK) {
+      appState = DISPLAY_INTENSITY;
+      writeString("0000");
     }
     break;
   case INPUT_ID: {
@@ -116,6 +122,9 @@ void App_Run(void) {
     // if (idInputState == ID_CONFIRMED) appState = INPUT_PASS;
     break;
   }
+  case DISPLAY_INTENSITY:
+    handleDisplayIntensity(result);
+    break;
   }
 }
 

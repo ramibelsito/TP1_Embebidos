@@ -37,8 +37,12 @@ void initDisplay() {
   init_psir();
 }
 
+uint8_t getDutyPercentage() {
+  return dutyPercentage;
+}
+
 void setDutyPercentage(uint8_t percentage) {
-  if (0 < percentage && percentage <= 25) dutyPercentage = percentage;
+  if (0 < percentage && percentage <= 100) dutyPercentage = percentage;
 }
 
 bool writeSegments(uint8_t segments, uint8_t digit) {
