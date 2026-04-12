@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define DIGITS 4
 #define MAX_STR_LEN 50
 // Whitespace padding after string finishes cycling.
 // For example if cycling string "12345" if we had no padding at some
@@ -38,8 +37,12 @@ void initDisplay() {
   init_psir();
 }
 
+uint8_t getDutyPercentage() {
+  return dutyPercentage;
+}
+
 void setDutyPercentage(uint8_t percentage) {
-  if (0 < percentage && percentage <= 25) dutyPercentage = percentage;
+  if (0 < percentage && percentage <= 100) dutyPercentage = percentage;
 }
 
 bool writeSegments(uint8_t segments, uint8_t digit) {

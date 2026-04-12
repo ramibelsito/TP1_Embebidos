@@ -4,7 +4,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define DIGITS 4
+
 void initDisplay();
+uint8_t getDutyPercentage();
 void setDutyPercentage(uint8_t percentage);
 
 /**
