@@ -11,10 +11,11 @@
 
 #define CARD_MAX      80
 #define CARD_MAX_CHARS     40
+#define CARD_TIMEOUT_MS    50   
 
-#define SS 0b01011 // Start Sentinel ';'
-#define ES 0b11111 // End Sentinel '?'
-#define FS 0b01101 // Field Separator '='
+#define SS 0b01011 // Start Sentinel ';' 
+#define ES 0b11111 // End Sentinel '?'    
+#define FS 0b01101 // Field Separator '=' 
 
 uint32_t debugCounter =0 ;
 char myString[500] = "";
@@ -83,11 +84,11 @@ bool cardInit(void)
     if (!gpioInit(PIN_ENABLE_DATA)) {
         return false;
     }
-
+    
     gpioMode(PIN_CARD_CLOCK, INPUT);
     gpioMode(PIN_CARD_DATA, INPUT);
     gpioMode(PIN_ENABLE_DATA, INPUT);
-
+    
 
     // Pull-up en las líneas que están idle en 1
     gpioPullUp(PIN_CARD_CLOCK);
@@ -105,10 +106,11 @@ bool cardInit(void)
     setCallbacks(PC, cardHandler, 0);
 
     // Habilito interrupción periodica para el timeout
-    pisr_register(timerForTimeout, 1);
+    pisr_register(timerForTimeout, 1);	
 
     return true;
 }
+
 
 
 // ==========================================================
@@ -122,7 +124,7 @@ void timerForTimeout (void) {
 
 // Handler para las interrupciones de la tarjeta
 void cardHandler(void)
-{
+{   
 
 	uint32_t flags = PORTC->ISFR;
 
@@ -155,13 +157,13 @@ void cardHandler(void)
 
 		// lógica para CARD CLOCK
 
-
+		
         if (!receiving)
             return;
 
-		lastBitTime = timeoutCounter;             // Actualiza el tiempo del último dato
+            lastBitTime = timeoutCounter;             // Actualiza el tiempo del último dato
  		bool bit = !gpioRead(PIN_CARD_DATA);
-		uint8_t idx = (uint8_t)(bitCount % 5);
+            uint8_t idx = (uint8_t)(bitCount % 5);
 		bitBuffer[(uint8_t)(bitCount/5)].fields.truchar.raw |= (bit << idx);
 
 		if (bit && !firstSSBit) {
@@ -179,20 +181,20 @@ void cardHandler(void)
 		if (bitBuffer[(uint8_t)((bitCount)/5)].fields.truchar.raw == ES || bitCount > 200)
 		{
 			flagES = true;
-		}
+            }
 
 
 		if (firstSSBit) {
-			bitCount++;
-		}
+            bitCount++;
+        }
 		#ifdef DEBUG
 		if (bit)
 		{
 
 			strcat(myString, "1");
 		}
-		else
-		{
+        else
+        {
 			strcat(myString, "0");
 		}
 		debugCounter++;
@@ -225,7 +227,7 @@ static void processIdData(void)
     uint8_t LRCPos = 0;
 
     uint8_t i = 0;
-
+    
 	ledToggle(BLUE);
     while ( bitBuffer[i].fields.truchar.raw != ES)
     {
@@ -244,11 +246,11 @@ static void processIdData(void)
     ESPos = i;
     LRCPos = ESPos+1;       // LRC viene siempre despues de ES
 
-
+                                 
     // Corroborar Paridad Horizontal
     i = 1;
     uint8_t count = 0;
-
+                                        
     while ( bitBuffer[SSPos+i].fields.truchar.raw != ES ) {
         count = bitBuffer[SSPos+i].fields.truchar.bit.b1
                     + bitBuffer[SSPos+i].fields.truchar.bit.b2
@@ -256,16 +258,16 @@ static void processIdData(void)
                     + bitBuffer[SSPos+i].fields.truchar.bit.b4;
 
         // printf("Dígito %u: Count = %u, Paridad = %u \n", i,count,bitBuffer[SSPos+i].fields.truchar.bit.b0);
-
-        if (!((count % 2 == 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 1) ||
+        
+        if (!((count % 2 == 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 1) || 
             (count % 2 != 0 && bitBuffer[SSPos+i].fields.truchar.bit.b0 == 0))) {
-
+            
             return;         // Detecta error --> Sale de la función
         }
         i++;
     }
 
-    // Corroborar Paridad Vertical (LRC)
+    // Corroborar Paridad Vertical (LRC) 
 
     i = 0;
     count = 0;
@@ -283,7 +285,7 @@ static void processIdData(void)
         }
 
         if (count != ((bitBuffer[LRCPos].fields.truchar.raw >> i) & 1)) {
-        	return;                      // Detecta error --> Sale de la función
+            return;                      // Detecta error --> Sale de la función
         }
         i++;
         j = 0;
@@ -345,9 +347,9 @@ static uint8_t get_char_from_bits(truchar_t t) {
     uint8_t r = t.fields.truchar.raw;  // b0...b4 (b0 más significativo === Paridad)
     uint8_t val = 0;
 
-    val |= ((r >> 0) & 0x01) << 0;
-    val |= ((r >> 1) & 0x01) << 1;
-    val |= ((r >> 2) & 0x01) << 2;
+    val |= ((r >> 0) & 0x01) << 0;  
+    val |= ((r >> 1) & 0x01) << 1;  
+    val |= ((r >> 2) & 0x01) << 2;  
     val |= ((r >> 3) & 0x01) << 3;
 
     return val;   // char formado por b1..b4 (4 bits)
@@ -420,21 +422,21 @@ bool cardAvailable(void) {
     return cardIsReadyFlag;
 }
 
-// processCardData tiene acceso desde la App, y permite vincular la app con la
+// processCardData tiene acceso desde la App, y permite vincular la app con la 
 //función que hace todos los cálculos para procesar el buffer de datos
 
 void processCardData(void) {
 
 	if (cardIsReadyFlag)
-	{
+    {
 
-		processIdData();
+        processIdData();
 		cardIsReadyFlag = 0;
 		timeoutCounter = 0;
 		lastBitTime = 0;
 		bitCount = 0;
-		// Limpiar el buffer
-		cleanBuffer();
+    // Limpiar el buffer
+    cleanBuffer();
 
 	}
 	lastCard = calculateIdNumber();     // Actualiza lastCard con el valor de id de la tarjeta procesada
