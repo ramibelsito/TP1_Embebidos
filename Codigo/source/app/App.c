@@ -27,7 +27,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//#define DEBUG
+// #define DEBUG
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -57,26 +57,23 @@ typedef enum {
   DISPLAY_INTENSITY,
 } AppState;
 
-
-void resetState (AppState * appState, bool * firstRun);
+void resetState(AppState* appState, bool* firstRun);
 
 void App_Init(void) {
   SysTick_Init(1000);
   initDisplay();
   if (ledsInit(WHITE)) {
-	 ledOff(WHITE);
-	 return;
-	}
+    ledOff(WHITE);
+    return;
+  }
 
   if (wheelInit() == false) {
-	  ledOn(RED);
-	}
+    ledOn(RED);
+  }
   if (!cardInit()) {
-	  ledOn(RED);
-	}
-
+    ledOn(RED);
+  }
 }
-
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run(void) {
@@ -90,12 +87,11 @@ void App_Run(void) {
   wheel_input_t result = readWheel();
   switch (appState) {
   case INITIAL:
-	if (firstRun)
-	{
-		writeString("CLICK TO LOG IN - DOUBLE CLICK FOR INTENSITY");
-		firstRun = false;
-	}
-	if (result == CLICK) {
+    if (firstRun) {
+      writeString("CLICK TO LOG IN - DOUBLE CLICK FOR INTENSITY");
+      firstRun = false;
+    }
+    if (result == CLICK) {
       appState = INPUT_ID;
       initIdInput();
     } else if (result == DOUBLECLICK) {
@@ -106,11 +102,9 @@ void App_Run(void) {
     break;
   case INPUT_ID: {
     IdInputState idInputState = handleIdInput(id, result);
-    if (idInputState == ID_CANCELLED)
-	{
-    	resetState(&appState, &firstRun);
-	}
-    else if (idInputState == ID_CONFIRMED) {
+    if (idInputState == ID_CANCELLED) {
+      resetState(&appState, &firstRun);
+    } else if (idInputState == ID_CONFIRMED) {
       appState = INPUT_PASS;
       initPassInput();
     }
@@ -118,9 +112,8 @@ void App_Run(void) {
   }
   case INPUT_PASS: {
     PassInputState passInputState = handlePassInput(pass, result);
-    if (passInputState == PASS_CANCELLED)
-    {
-    	resetState(&appState, &firstRun);
+    if (passInputState == PASS_CANCELLED) {
+      resetState(&appState, &firstRun);
     }
     if (passInputState == PASS_CONFIRMED) {
       turnOnDisplayLed(0);
@@ -130,43 +123,39 @@ void App_Run(void) {
   }
   case DISPLAY_INTENSITY:
     IntensityState intensityState = handleDisplayIntensity(result);
-    if (intensityState == INTENSITY_CONFIRM)
-    {
-    	resetState(&appState, &firstRun);
+    if (intensityState == INTENSITY_CONFIRM) {
+      resetState(&appState, &firstRun);
     }
     break;
   }
-	/*char algo[]= "hola";
-	if (!gpioRead(PIN_ENABLE_DATA))
-	{
-		//ledToggle(RED);
-	}
-	uint32_t idReal = 60612683;
-	uint32_t id;
-	if (cardAvailable())
-	 {
-		//ledOn(BLUE);
-		 processCardData();
-		 id = cardRead(algo);
-		 if (id == idReal)
-		{
-			ledOn(GREEN);
-			id = 0;
-		}
-		else
-		{
-			ledOn(RED);
-		}
-	 }*/
-
-
+  /*char algo[]= "hola";
+  if (!gpioRead(PIN_ENABLE_DATA))
+  {
+          //ledToggle(RED);
+  }
+  uint32_t idReal = 60612683;
+  uint32_t id;
+  if (cardAvailable())
+   {
+          //ledOn(BLUE);
+           processCardData();
+           id = cardRead(algo);
+           if (id == idReal)
+          {
+                  ledOn(GREEN);
+                  id = 0;
+          }
+          else
+          {
+                  ledOn(RED);
+          }
+   }*/
 }
 
-void resetState (AppState * appState, bool * firstRun)
-{
-	*appState = INITIAL;
-	*firstRun = true;
-	return;
+void resetState(AppState* appState, bool* firstRun) {
+  *appState = INITIAL;
+  *firstRun = true;
+  return;
 }
 /*******************************************************************************
  *******************************************************************************
