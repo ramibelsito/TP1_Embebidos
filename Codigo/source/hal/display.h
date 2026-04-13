@@ -73,4 +73,6 @@ void writeString(const char* string);
 
 void cleanDisplay();
 
+void enableDot(uint8_t digit, bool value);
+
 #endif // _DISPLAY_H_

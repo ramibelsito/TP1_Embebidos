@@ -1,5 +1,4 @@
 #include "hal/display.h"
-#include "hal/leds.h"
 #include "hal/shift.h"
 #include "mcal/SysTick.h"
 #include <stdbool.h>
@@ -46,6 +45,14 @@ void setDutyPercentage(uint8_t percentage) {
   if (0 < percentage && percentage <= 100) dutyPercentage = percentage;
 }
 
+void enableDot(uint8_t digit, bool value) {
+  if (value) {
+    digits[digit] |= 0b10000000;
+  } else {
+    digits[digit] &= 0b01111111;
+  }
+}
+
 bool writeSegments(uint8_t segments, uint8_t digit) {
   if (digit > 3) return false;
   digits[digit] = segments;
@@ -79,10 +86,11 @@ void writeString(const char* string) {
   for (; i < MAX_STR_LEN && string[i] != 0; ++i) {
     displayString[i] = char2segments[(uint8_t)string[i]];
   }
+  displayStringLen = i;
+
   for (uint8_t j = i; j < i + STR_PADDING; ++j) {
     displayString[j] = char2segments[' '];
   }
-  displayStringLen = i;
 
   for (uint8_t j = 0; j < DIGITS; ++j) {
     digits[j] = displayString[j];

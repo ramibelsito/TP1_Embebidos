@@ -4,8 +4,6 @@
 #include "hal/wheel.h"
 #include <stdint.h>
 
-
-
 typedef struct pass_input_t {
   char buf[PASS_LEN];
   uint8_t bufIdx;
