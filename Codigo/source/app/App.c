@@ -13,16 +13,16 @@
 #include "app/pass_input.h"
 #include "app/user.h"
 #include "app/utils.h"
-#include "hal/timers.h"
+
 
 // FOR INIT
+#include "hal/timers.h"
 #include "hal/board.h"
 #include "hal/card.h"
 #include "hal/display.h"
 #include "hal/leds.h"
 #include "hal/wheel.h"
-#include "mcal/SysTick.h"
-#include "mcal/gpio.h"
+#include "hal/system.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -59,7 +59,7 @@ typedef enum {
 void resetState(AppState* appState, bool* firstRun, timer_t* timer);
 
 void App_Init(void) {
-  SysTick_Init(1000);
+  initSystem(1000);
   initDisplay();
   if (ledsInit(WHITE)) {
     ledOff(WHITE);
@@ -100,6 +100,7 @@ void App_Run(void) {
     if (firstRun) {
       writeString("CLICK TO LOG IN - DOUBLE CLICK FOR INTENSITY");
       firstRun = false;
+      ledOn(BLUE);
     }
     if (result == CLICK) {
       appState = INPUT_ID;

@@ -15,10 +15,10 @@
 // NOTE: Asuming the shift registers 0-7 are for the display segments, 8-9 for display digit and 10-11 for leds.
 // #define DISPLAY_MASK 0x03FF // 0b0000'0011'1111'1111
 #define SEG_MASK 0x00FF  // 0b0000'0000'1111'1111
-#define DIGIT_MASK 0x300 // 0b0000'0011'0000'0000
-#define LEDS_MASK 0xC00  // 0b0000'1100'0000'0000
-#define DIGIT_SHIFT 8
-#define LEDS_SHIFT 10
+#define DIGIT_MASK 0b0001100000000000 // 0b0011'0000'0000'0000
+#define LEDS_MASK 0b0000011000000000  // 0b0000'1100'0000'0000
+#define DIGIT_SHIFT 11
+#define LEDS_SHIFT 9
 
 #define DISPLAY_UPDATE_RATE 2
 #define DISPLAY_SLIDE_AND_BLINK_RATE 2000

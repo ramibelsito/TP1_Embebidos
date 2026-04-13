@@ -4,6 +4,8 @@
 #include "hal/wheel.h"
 #include "mcal/SysTick.h"
 #include "hal/leds.h"
+#include "hal/IRQN_Ports.h"
+
 #define WHEEL_READ_TIME	10
 
 #define BUFFER_SIZE		100 			// Number of elements of encoderData
@@ -78,6 +80,7 @@ bool wheelInit()
 }
 
 void wheelReadGPIO(void) {
+	toggleInterruptFlag();
 	encoderData[idx].rcha = gpioRead(PIN_RCHA);
 	encoderData[idx].rchb = gpioRead(PIN_RCHB);
 	encoderData[idx].rchd = gpioRead(PIN_RCHD);
@@ -88,7 +91,7 @@ void wheelReadGPIO(void) {
 		idx = idx % BUFFER_SIZE;
 	}
 	timeCounter += 1;
-
+	toggleInterruptFlag();
 }
 
 

@@ -15,7 +15,6 @@
 
 #include "mcal/gpio.h"
 
-
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -37,6 +36,7 @@
 #define SW_ACTIVE       LOW // 
 #define SW_INPUT_TYPE   BOOL // 
 
+
 /**** Encoder defines **********************************************************/
 #define PIN_RCHA		PORTNUM2PIN(PC,3)
 #define PIN_RCHB		PORTNUM2PIN(PC,2)
@@ -54,6 +54,8 @@
 #define PIN_CLK PORTNUM2PIN(PB, 9)    // serial clock
 #define PIN_SETOUT PORTNUM2PIN(PA, 1) // latch clock
 
+
+#define PIN_INTERRUPTION_FLAG PORTNUM2PIN(PB,18)
 
 /*******************************************************************************
  ******************************************************************************/

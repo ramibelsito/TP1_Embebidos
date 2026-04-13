@@ -19,31 +19,11 @@
 uint32_t debugCounter =0 ;
 char myString[500] = "";
 #endif // DEBUG
-// Se puede acceder al char completo como x.fields.truchar.raw o podes acceder bit a bit como x.fields.truchar.bit.b0
-// Hay que agregar al union una forma de acceder solo al bit paridad y solo a los 4 bits de caracter
-/*typedef union
-{
-    uint8_t raw;
-    struct {
-        union {
-            uint8_t raw : 5;
-            struct {
-                uint8_t b4 : 1;         // LSB
-                uint8_t b3 : 1;
-                uint8_t b2 : 1;
-                uint8_t b1 : 1;
-                uint8_t b0 : 1;         // MSB
-            } bit;
-        } truchar;
-        uint8_t free : 3;
-    } fields;
-} truchar_t;
-*/
+
 
 
 // Variables internas
 static volatile uint8_t bitBuffer[CARD_MAX];
-//static volatile truchar_t bitBuffer_truchar[CARD_MAX];
 
 static volatile int32_t bitCount = 0;
 volatile bool cardDataReady = false;            // True cuando se terminar de recibir los bits -> Activa el procesamiento processBuffer()
@@ -108,7 +88,7 @@ bool cardInit(void)
     setCallbacks(PC, cardHandler, 0);
 
     // Habilito interrupción periodica para el timeout
-    pisr_register(timerForTimeout, 1);	
+    pisr_register(timerForTimeout, 10);
 
     return true;
 }
@@ -121,14 +101,19 @@ bool cardInit(void)
 
 // Aumenta su valor a medida que entra el systick. Sirve de referencia para veificar si se pasa un tiempo límite de espera
 void timerForTimeout (void) {
+	toggleInterruptFlag();
     timeoutCounter++;
 
-    //checkTimeout();
+    if(receiving) {
+		checkTimeout();
+    }
+    toggleInterruptFlag();
 }
 
 // Handler para las interrupciones de la tarjeta
 void cardHandler(void)
 {
+	toggleInterruptFlag();
     uint32_t flags = PORTC->ISFR;
 
     // ============================
@@ -253,6 +238,7 @@ void cardHandler(void)
             return;
         }
     }
+    toggleInterruptFlag();
 }
 
 

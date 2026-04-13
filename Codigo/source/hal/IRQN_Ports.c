@@ -2,11 +2,16 @@
 #include "mcal/gpio.h"
 #include "hardware.h"
 #include "hal/IRQN_Ports.h"
+#include "hal/board.h"
 
 #define CANT_PUERTOS 5
 #define MAX_INTERRUPT 8
 
 pCallBack_t pCallBackList[CANT_PUERTOS][MAX_INTERRUPT] = {{{},{},{},{},{},{},{},{}},{{},{},{},{},{},{},{},{}},{{},{},{},{},{},{},{},{}},{{},{},{},{},{},{},{},{}},{{},{},{},{},{},{},{},{}}};
+
+void toggleInterruptFlag(void) {
+	gpioToggle(PIN_INTERRUPTION_FLAG);
+}
 
 
 void PORTC_IRQHandler(void)
@@ -29,6 +34,11 @@ void setCallbacks(uint8_t port, pCallBack_t pCallBack, uint8_t interruptNum)
 
 
 void init_nvic(uint8_t port) {
+	if(!gpioInit(PIN_INTERRUPTION_FLAG)) {
+		return;
+	}
+	gpioMode(PIN_INTERRUPTION_FLAG, OUTPUT);
+
 	switch(port)
 	{
 	case PA:
