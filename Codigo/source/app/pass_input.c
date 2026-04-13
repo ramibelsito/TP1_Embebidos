@@ -27,8 +27,11 @@ void initPassInput() {
 
 PassInputState handlePassInput(char* pass, wheel_input_t wheelResult) {
   for (uint8_t i = 0; i < DIGITS; ++i) {
-    bool blink = (state == PASS_EDIT) && (i == min(DIGITS - 1, input.bufIdx));
+    bool isCursor = (i == min(DIGITS - 1, input.bufIdx));
+    bool blink = (state == PASS_EDIT) && isCursor;
     writeCharacter(input.display[i], i, blink);
+    bool dot = (state == PASS_SELECT_DIGIT) && isCursor;
+    enableDot(i, dot);
   }
 
   if (state == PASS_EDIT) {
