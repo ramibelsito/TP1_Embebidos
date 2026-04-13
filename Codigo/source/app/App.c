@@ -72,6 +72,7 @@ void App_Init(void) {
   if (!cardInit()) {
     ledOn(RED);
   }
+  initTimers();
 #ifdef ADMIN
   if (initUserSystem()) {
     ledOn(RED); // fallo al inicializar userDataset
@@ -112,14 +113,14 @@ void App_Run(void) {
   case INPUT_ID: {
     IdInputState idInputState = handleIdInput(id, result);
     if (idInputState == ID_CANCELLED) {
-      resetState(&appState, &firstRun);
+      resetState(&appState, &firstRun, &openLockTimer);
     } else if (idInputState == ID_CONFIRMED) {
       if (searchId(id, &idxDataset)) {
         appState = INPUT_PASS;
         initPassInput();
       } else {
         writeString("WRONG USER");
-        resetState(&appState, &firstRun);
+        resetState(&appState, &firstRun, &openLockTimer);
       }
     }
     break;
@@ -127,7 +128,7 @@ void App_Run(void) {
   case INPUT_PASS: {
     PassInputState passInputState = handlePassInput(pass, result, &fullPass);
     if (passInputState == PASS_CANCELLED) {
-      resetState(&appState, &firstRun);
+      resetState(&appState, &firstRun, &openLockTimer);
       ledOn(RED);
     }
     if (passInputState == PASS_CONFIRMED) {
@@ -140,7 +141,7 @@ void App_Run(void) {
           if (timerFinished(&openLockTimer)) {
             turnOffDisplayLed(0);
             turnOffDisplayLed(2);
-            resetState(&appState, &firstRun);
+            resetState(&appState, &firstRun, &openLockTimer);
           }
         }
       } else {
@@ -153,7 +154,7 @@ void App_Run(void) {
   case DISPLAY_INTENSITY: {
     IntensityState intensityState = handleDisplayIntensity(result);
     if (intensityState == INTENSITY_CONFIRM) {
-      resetState(&appState, &firstRun);
+      resetState(&appState, &firstRun, &openLockTimer);
     }
     break;
   }

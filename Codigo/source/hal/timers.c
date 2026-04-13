@@ -7,7 +7,7 @@ uint64_t ticks = 0;
 static void updateTick();
 
 void initTimers() {
-  pisr_register(updateTick, 1);
+  pisr_register(updateTick, 5);
 }
 
 timer_t timerCreate(uint32_t durationMillis) {
