@@ -121,12 +121,13 @@ void App_Run(void) {
     }
     break;
   }
-  case DISPLAY_INTENSITY:
+  case DISPLAY_INTENSITY: {
     IntensityState intensityState = handleDisplayIntensity(result);
     if (intensityState == INTENSITY_CONFIRM) {
       resetState(&appState, &firstRun);
     }
     break;
+  }
   }
   /*char algo[]= "hola";
   if (!gpioRead(PIN_ENABLE_DATA))
