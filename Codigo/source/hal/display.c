@@ -3,6 +3,7 @@
 #include "mcal/SysTick.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include "hal/leds.h"
 
 #define MAX_STR_LEN 50
 // Whitespace padding after string finishes cycling.
@@ -12,13 +13,13 @@
 #define STR_PADDING 2
 
 // NOTE: Asuming the shift registers 0-7 are for the display segments and 10-11 for display digit.
-#define DISPLAY_MASK 0xCFF // 0b0000'1100'1111'1111
+#define DISPLAY_MASK 0x03FF // 0b0000'0011'1111'1111
 #define SEG_MASK 0x00FF    // 0b0000'0000'1111'1111
-#define DIGIT_MASK 0xC00   // 0b0000'1100'0000'0000
-#define DIGIT_SHIFT 10
+#define DIGIT_MASK 0x300   // 0b0000'0011'0000'0000
+#define DIGIT_SHIFT 8
 
 #define DISPLAY_UPDATE_RATE 10
-#define DISPLAY_SLIDE_AND_BLINK_RATE 500
+#define DISPLAY_SLIDE_AND_BLINK_RATE 1000
 
 static uint8_t digits[DIGITS] = {0};
 static uint8_t displayString[MAX_STR_LEN + STR_PADDING] = {0};
@@ -26,7 +27,7 @@ static uint8_t displayStringLen = 0;
 static uint8_t dutyPercentage = 100;
 static bool digitBlink[DIGITS] = {0};
 
-void init_psir();
+//void init_psir();
 void updateDisplay();
 void updateDisplayRegisters(uint8_t segments, uint8_t digit);
 void updateSlideAndBlink();
@@ -34,7 +35,8 @@ void updateSlideAndBlink();
 void initDisplay() {
   pisr_register(updateDisplay, DISPLAY_UPDATE_RATE);
   pisr_register(updateSlideAndBlink, DISPLAY_SLIDE_AND_BLINK_RATE);
-  init_psir();
+  shiftInit();
+  //init_psir();
 }
 
 uint8_t getDutyPercentage() {
@@ -152,10 +154,11 @@ void updateDisplay() {
   uint8_t segments = -(duty[currentDigit] < dutyPercentage) & digits[currentDigit];
   updateDisplayRegisters(segments, currentDigit);
   duty[currentDigit] = (duty[currentDigit] + 1) % 100;
-  currentDigit = (currentDigit + 1) % DIGITS;
+  currentDigit = (currentDigit + 1) % DIGITS; // cicleo por los digitos
 }
 
 void updateDisplayRegisters(uint8_t segments, uint8_t digit) {
+
   uint16_t shiftRegister = shiftRead();
   shiftRegister = (shiftRegister & ~DISPLAY_MASK) | (segments & SEG_MASK) | ((digit << DIGIT_SHIFT) & DIGIT_MASK);
   shiftWriteWord(shiftRegister);

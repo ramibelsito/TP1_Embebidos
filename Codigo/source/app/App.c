@@ -25,6 +25,8 @@
 #include "mcal/gpio.h"
 #include <stdbool.h>
 #include <stdint.h>
+
+//#define DEBUG
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -49,8 +51,19 @@ void sensor_read(void) {
 */
 
 void App_Init(void) {
-  SysTick_Init(100);
+  SysTick_Init(1000);
   initDisplay();
+  if (ledsInit(WHITE)) {
+	 ledOff(WHITE);
+	 return;
+	}
+
+  if (wheelInit() == false) {
+	  ledOn(RED);
+	}
+  if (!cardInit()) {
+	  ledOn(RED);
+	}
   /*if(gpioInit(PIN_LED_RED)) {
           gpioMode(PIN_LED_RED, OUTPUT);
           gpioWrite(PIN_LED_RED, HIGH);
@@ -68,17 +81,18 @@ void App_Init(void) {
 
   //testInterruptSW2(PIN_SW2);
   init_nvic();*/
-  /* if (ledsInit(WHITE)) { */
-  /*   ledOff(WHITE); */
-  /*   return; */
-  /* } */
-  /**/
-  /* if (wheelInit() == false) { */
-  /*   ledOn(RED); */
-  /* } */
-  /* if (!cardInit()) { */
-  /*   ledOn(RED); */
-  /* } */
+#ifdef DEBUG
+  cleanDisplay();
+  writeCharacter('5', 3, 1);
+  writeCharacter('0', 2, 0);
+  writeCharacter('2', 1, 1);
+  writeCharacter('7', 0, 0);
+  cleanDisplay();
+  writeString("HELLO WORLD");
+  cleanDisplay();
+  writeSegments(0b10000000, 0);
+
+#endif //DEBUG
 }
 
 typedef enum {
@@ -90,13 +104,14 @@ typedef enum {
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run(void) {
+#ifndef DEBUG
   static AppState appState = INITIAL;
   static char id[ID_LEN] = {0};
   static char pass[PASS_LEN] = {0};
 
-  if (!gpioRead(PIN_ENABLE_DATA)) {
+  /*if (!gpioRead(PIN_ENABLE_DATA)) {
     // ledOn(GREEN);
-  }
+  }*/
 
   wheel_input_t result = readWheel();
   switch (appState) {
@@ -126,6 +141,7 @@ void App_Run(void) {
     handleDisplayIntensity(result);
     break;
   }
+#endif // NOT DEBUG
 }
 
 /*******************************************************************************

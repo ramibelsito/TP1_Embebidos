@@ -6,7 +6,7 @@
 
 #define OUTCANT 16
 
-static uint16_t shiftRegister;
+static uint16_t shiftRegister = 0;
 
 uint16_t shiftRead() {
   return shiftRegister;
@@ -25,7 +25,7 @@ void shiftWriteBit(int index, bool state) {
 
 bool shiftOutUpdate() {
   // TODO: averiguar si se puede hacer más eficiente con SPI.
-  for (int i = 15; i >= 0; i--) {
+  for (int i = 0; i < 16; i++) {
     gpioWrite(PIN_SHIFT, (shiftRegister >> i) & 1);
     gpioWrite(PIN_CLK, 1);
     gpioWrite(PIN_CLK, 0);
