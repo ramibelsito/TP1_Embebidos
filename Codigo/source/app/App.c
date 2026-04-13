@@ -56,7 +56,7 @@ typedef enum {
   DISPLAY_INTENSITY,
 } AppState;
 
-void resetState(AppState* appState, bool* firstRun);
+void resetState(AppState* appState, bool* firstRun, timer_t* timer);
 
 void App_Init(void) {
   SysTick_Init(1000);
@@ -140,7 +140,6 @@ void App_Run(void) {
           if (timerFinished(&openLockTimer)) {
             turnOffDisplayLed(0);
             turnOffDisplayLed(2);
-            turnOnDisplayLed(0);
             resetState(&appState, &firstRun);
           }
         }
@@ -183,9 +182,10 @@ void App_Run(void) {
    }*/
 }
 
-void resetState(AppState* appState, bool* firstRun) {
+void resetState(AppState* appState, bool* firstRun, timer_t* timer) {
   *appState = INITIAL;
   *firstRun = true;
+  timer->started = false;
   return;
 }
 /*******************************************************************************
