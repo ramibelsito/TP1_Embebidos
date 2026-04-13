@@ -12,6 +12,7 @@
 
 #include "app/display_intensity.h"
 #include "app/id_input.h"
+#include "app/pass_input.h"
 #include "app/utils.h"
 #include "hal/timers.h"
 
@@ -113,6 +114,7 @@ void App_Run(void) {
     // ledOn(GREEN);
   }*/
 
+  // TODO: use `wheelInputFlag`
   wheel_input_t result = readWheel();
   switch (appState) {
   case INITIAL:
@@ -128,13 +130,18 @@ void App_Run(void) {
   case INPUT_ID: {
     IdInputState idInputState = handleIdInput(id, result);
     if (idInputState == ID_CANCELLED) appState = INITIAL;
-    else if (idInputState == ID_CONFIRMED) appState = INPUT_PASS;
+    else if (idInputState == ID_CONFIRMED) {
+      appState = INPUT_PASS;
+      initPassInput();
+    }
     break;
   }
   case INPUT_PASS: {
-    // IdInputState idInputState = handleIdInput(id, result);
-    // if (idInputState == ID_CANCELLED) appState = INITIAL;
-    // if (idInputState == ID_CONFIRMED) appState = INPUT_PASS;
+    PassInputState passInputState = handlePassInput(pass, result);
+    if (passInputState == PASS_CANCELLED) appState = INITIAL;
+    if (passInputState == PASS_CONFIRMED) {
+      // TODO: check id and pass etc.
+    }
     break;
   }
   case DISPLAY_INTENSITY:
