@@ -7,6 +7,7 @@ user_t userDataset[] = {
     {.id = "12341234", .password = "1234", .adminPermit = false, .fullPass = false},
     {.id = "00000000", .password = "00000", .adminPermit = false, .fullPass = true},
     {.id = "12345678", .password = "42069", .adminPermit = false, .fullPass = true},
+    {.id = "60612683", .password = "80085", .adminPermit = false, .fullPass = true},
 };
 
 #ifdef ADMIN
