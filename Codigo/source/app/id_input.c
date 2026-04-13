@@ -25,7 +25,7 @@ void initIdInput() {
 
 IdInputState handleIdInput(char* id, wheel_input_t wheelResult) {
   for (uint8_t i = 0; i < DIGITS; ++i) {
-    bool blink = (state == ID_EDIT) && (i == (input.bufIdx % DIGITS));
+    bool blink = (state == ID_EDIT) && (i == min(DIGITS - 1, input.bufIdx));
     writeCharacter(input.display[i], i, blink);
   }
 
