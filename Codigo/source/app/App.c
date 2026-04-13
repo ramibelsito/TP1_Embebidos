@@ -8,13 +8,12 @@
  * INCLUDE HEADER FILES
  ******************************************************************************/
 
-
 #include "app/display_intensity.h"
 #include "app/id_input.h"
 #include "app/pass_input.h"
+#include "app/user.h"
 #include "app/utils.h"
 #include "hal/timers.h"
-#include "app/user.h"
 
 // FOR INIT
 #include "hal/board.h"
@@ -74,11 +73,10 @@ void App_Init(void) {
     ledOn(RED);
   }
 #ifdef ADMIN
-  if (initUserSystem())
-  {
-	  ledOn(RED); // fallo al inicializar userDataset
+  if (initUserSystem()) {
+    ledOn(RED); // fallo al inicializar userDataset
   }
-#endif //ADMIN
+#endif // ADMIN
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
@@ -90,6 +88,10 @@ void App_Run(void) {
   static bool firstRun = true;
   static bool fullPass = 0; // es 1 si son 5 caracteres
   static int8_t idxDataset = 0;
+  // can't use `timerCreate` in static initialization so I need to create manually, idk how to
+  // it better.
+  static timer_t openLockTimer = {.startMillis = 0, .durationMillis = 5000, .started = false};
+
   // TODO: use `wheelInputFlag`
   wheel_input_t result = readWheel();
   switch (appState) {
@@ -112,16 +114,13 @@ void App_Run(void) {
     if (idInputState == ID_CANCELLED) {
       resetState(&appState, &firstRun);
     } else if (idInputState == ID_CONFIRMED) {
-    	if (searchId(id, &idxDataset))
-    	{
-    		appState = INPUT_PASS;
-    		initPassInput();
-    	}
-    	else
-    	{
-    		writeString("WRONG USER");
-    		resetState(&appState, &firstRun);
-    	}
+      if (searchId(id, &idxDataset)) {
+        appState = INPUT_PASS;
+        initPassInput();
+      } else {
+        writeString("WRONG USER");
+        resetState(&appState, &firstRun);
+      }
     }
     break;
   }
@@ -132,17 +131,23 @@ void App_Run(void) {
       ledOn(RED);
     }
     if (passInputState == PASS_CONFIRMED) {
-    	if (checkPass(&idxDataset, pass, fullPass))
-    	{
-        	turnOnDisplayLed(0);
-        	resetState(&appState, &firstRun);
-    	}
-    	else
-    	{
-    		cleanDisplay();
-    		writeString("BAD PASS");
-    	}
-      // TODO: check id and pass etc.
+      if (checkPass(&idxDataset, pass, fullPass)) {
+        if (!openLockTimer.started) {
+          timerStart(&openLockTimer);
+          turnOnDisplayLed(0);
+          turnOnDisplayLed(2);
+        } else {
+          if (timerFinished(&openLockTimer)) {
+            turnOffDisplayLed(0);
+            turnOffDisplayLed(2);
+            turnOnDisplayLed(0);
+            resetState(&appState, &firstRun);
+          }
+        }
+      } else {
+        cleanDisplay();
+        writeString("BAD PASS");
+      }
     }
     break;
   }
