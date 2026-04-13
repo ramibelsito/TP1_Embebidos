@@ -15,7 +15,7 @@ typedef struct pass_input_t {
 static pass_input_t input = {.buf = {0}, .bufIdx = 0, .bufLen = 0, .display = "-   ", .hiddenBuf = "-_-_-"};
 static PassInputState state = PASS_EDIT;
 
-static void handlePassEdit(char* pass, wheel_input_t wheelResult);
+static void handlePassEdit(char* pass, wheel_input_t wheelResult, bool * fullPass);
 static void handlePassSelectDigit(wheel_input_t wheelResult);
 static void updateDisplay();
 
@@ -25,7 +25,7 @@ void initPassInput() {
   cleanDisplay();
 }
 
-PassInputState handlePassInput(char* pass, wheel_input_t wheelResult) {
+PassInputState handlePassInput(char* pass, wheel_input_t wheelResult, bool * fullPass) {
   for (uint8_t i = 0; i < DIGITS; ++i) {
     bool isCursor = (i == min(DIGITS - 1, input.bufIdx));
     bool blink = (state == PASS_EDIT) && isCursor;
@@ -35,7 +35,7 @@ PassInputState handlePassInput(char* pass, wheel_input_t wheelResult) {
   }
 
   if (state == PASS_EDIT) {
-    handlePassEdit(pass, wheelResult);
+    handlePassEdit(pass, wheelResult, fullPass);
   } else if (state == PASS_SELECT_DIGIT) {
     handlePassSelectDigit(wheelResult);
   }
@@ -43,7 +43,7 @@ PassInputState handlePassInput(char* pass, wheel_input_t wheelResult) {
   return state;
 }
 
-static void handlePassEdit(char* pass, wheel_input_t wheelResult) {
+static void handlePassEdit(char* pass, wheel_input_t wheelResult, bool * fullPass) {
   switch (wheelResult) {
   case RIGHTTURN:
     input.bufIdx = input.bufLen == PASS_LEN ? PASS_LEN - 1 : clampInc(input.bufIdx, input.bufLen);
@@ -64,6 +64,14 @@ static void handlePassEdit(char* pass, wheel_input_t wheelResult) {
     break;
   case DOUBLECLICK:
     if (input.bufLen >= 4) {
+      if (input.bufLen == 4)
+      {
+    	  *fullPass = false;
+      }
+      else
+      {
+    	  *fullPass = true;
+      }
       uint8_t i = 0;
       for (; i < input.bufLen; ++i) pass[i] = input.buf[i];
       for (; i < PASS_LEN; ++i) pass[i] = 0;

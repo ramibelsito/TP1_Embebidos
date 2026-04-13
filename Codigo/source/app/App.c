@@ -8,13 +8,13 @@
  * INCLUDE HEADER FILES
  ******************************************************************************/
 
-#include "app/action.h"
 
 #include "app/display_intensity.h"
 #include "app/id_input.h"
 #include "app/pass_input.h"
 #include "app/utils.h"
 #include "hal/timers.h"
+#include "app/user.h"
 
 // FOR INIT
 #include "hal/board.h"
@@ -73,6 +73,12 @@ void App_Init(void) {
   if (!cardInit()) {
     ledOn(RED);
   }
+#ifdef ADMIN
+  if (initUserSystem())
+  {
+	  ledOn(RED); // fallo al inicializar userDataset
+  }
+#endif //ADMIN
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
@@ -82,7 +88,8 @@ void App_Run(void) {
   static char id[ID_LEN] = {0};
   static char pass[PASS_LEN] = {0};
   static bool firstRun = true;
-
+  static bool fullPass = 0; // es 1 si son 5 caracteres
+  static int8_t idxDataset = 0;
   // TODO: use `wheelInputFlag`
   wheel_input_t result = readWheel();
   switch (appState) {
@@ -105,18 +112,31 @@ void App_Run(void) {
     if (idInputState == ID_CANCELLED) {
       resetState(&appState, &firstRun);
     } else if (idInputState == ID_CONFIRMED) {
-      appState = INPUT_PASS;
-      initPassInput();
+    	if (searchId(id, &idxDataset))
+    	{
+    		appState = INPUT_PASS;
+    		initPassInput();
+    	}
+    	else
+    	{
+    		writeString("WRONG USER");
+    		resetState(&appState, &firstRun);
+    	}
     }
     break;
   }
   case INPUT_PASS: {
-    PassInputState passInputState = handlePassInput(pass, result);
+    PassInputState passInputState = handlePassInput(pass, result, &fullPass);
     if (passInputState == PASS_CANCELLED) {
       resetState(&appState, &firstRun);
+      ledOn(RED);
     }
     if (passInputState == PASS_CONFIRMED) {
-      turnOnDisplayLed(0);
+    	if (checkPass(&idxDataset, pass, fullPass))
+    	{
+        	turnOnDisplayLed(0);
+        	resetState(&appState, &firstRun);
+    	}
       // TODO: check id and pass etc.
     }
     break;

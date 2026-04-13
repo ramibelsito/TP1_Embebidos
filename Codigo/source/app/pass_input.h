@@ -10,6 +10,6 @@
 typedef enum { PASS_EDIT, PASS_SELECT_DIGIT, PASS_CONFIRMED, PASS_CANCELLED } PassInputState;
 
 void initPassInput();
-PassInputState handlePassInput(char* pass, wheel_input_t wheelResult);
+PassInputState handlePassInput(char* pass, wheel_input_t wheelResult, bool * fullPass);
 
 #endif
