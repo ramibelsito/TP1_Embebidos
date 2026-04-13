@@ -123,6 +123,7 @@ void App_Run(void) {
     	resetState(&appState, &firstRun);
     }
     if (passInputState == PASS_CONFIRMED) {
+      turnOnDisplayLed(0);
       // TODO: check id and pass etc.
     }
     break;

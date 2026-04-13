@@ -5,10 +5,14 @@
 #include <stdint.h>
 
 #define DIGITS 4
+#define LED_COUNT 3
 
 void initDisplay();
 uint8_t getDutyPercentage();
 void setDutyPercentage(uint8_t percentage);
+
+void turnOnDisplayLed(uint8_t idx);
+void turnOffDisplayLed(uint8_t idx);
 
 /**
  * @param segments

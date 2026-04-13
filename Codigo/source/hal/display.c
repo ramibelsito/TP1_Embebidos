@@ -12,11 +12,13 @@
 #define STR_PADDING 2
 
 // TODO: Remember to fix masks if we change physical connections.
-// NOTE: Asuming the shift registers 0-7 are for the display segments and 10-11 for display digit.
-#define DISPLAY_MASK 0x03FF // 0b0000'0011'1111'1111
-#define SEG_MASK 0x00FF     // 0b0000'0000'1111'1111
-#define DIGIT_MASK 0x300    // 0b0000'0011'0000'0000
+// NOTE: Asuming the shift registers 0-7 are for the display segments, 8-9 for display digit and 10-11 for leds.
+// #define DISPLAY_MASK 0x03FF // 0b0000'0011'1111'1111
+#define SEG_MASK 0x00FF  // 0b0000'0000'1111'1111
+#define DIGIT_MASK 0x300 // 0b0000'0011'0000'0000
+#define LEDS_MASK 0xC00  // 0b0000'1100'0000'0000
 #define DIGIT_SHIFT 8
+#define LEDS_SHIFT 10
 
 #define DISPLAY_UPDATE_RATE 20
 #define DISPLAY_SLIDE_AND_BLINK_RATE 2000
@@ -29,8 +31,10 @@ static uint8_t dutyPercentage = 100;
 static bool digitBlink[DIGITS] = {0};
 static uint8_t blinkBuf[DIGITS] = {0};
 
+static bool leds[LED_COUNT] = {0};
+
 static void updateDisplay();
-static void updateDisplayRegisters(uint8_t segments, uint8_t digit);
+static void updateDisplayRegisters(uint8_t segments, uint8_t digit, uint8_t led);
 static void updateSlideAndBlink();
 
 void initDisplay() {
@@ -47,6 +51,16 @@ void setDutyPercentage(uint8_t percentage) {
   if (0 < percentage && percentage <= 100) dutyPercentage = percentage;
 }
 
+void turnOnDisplayLed(uint8_t idx) {
+  if (idx >= LED_COUNT) return;
+  leds[idx] = true;
+}
+
+void turnOffDisplayLed(uint8_t idx) {
+  if (idx >= LED_COUNT) return;
+  leds[idx] = false;
+}
+
 void enableDot(uint8_t digit, bool value) {
   if (value) {
     digits[digit] |= 0b10000000;
@@ -56,7 +70,7 @@ void enableDot(uint8_t digit, bool value) {
 }
 
 bool writeSegments(uint8_t segments, uint8_t digit) {
-  if (digit > 3) return false;
+  if (digit >= DIGITS) return false;
   digits[digit] = segments;
   return true;
 }
@@ -105,6 +119,8 @@ void cleanDisplay() {
     digitBlink[i] = false;
   }
   displayStringLen = 0;
+
+  for (uint8_t i = 0; i < LED_COUNT; ++i) leds[i] = false;
 }
 
 // Private functions
@@ -112,10 +128,8 @@ void cleanDisplay() {
 static void updateDisplay() {
   static uint8_t currentDigit = 0;
   static uint8_t duty[DIGITS] = {0};
-  // NOTE: this turns on each digits `dutyPercentage` of the time, then keeps
-  // them off the rest of the time, and repeats. Depending on how fast each
-  // cycle is this may cause a noticeable blink, in that case we would need
-  // to intercalate the ons and offs.
+  static uint8_t currentLed = 0;
+
   uint8_t xsegments = 0;
   if (digitBlink[currentDigit]) {
     xsegments = digits[currentDigit] & blinkBuf[currentDigit];
@@ -123,14 +137,17 @@ static void updateDisplay() {
     xsegments = digits[currentDigit];
   }
   uint8_t segments = -(duty[currentDigit] < dutyPercentage) & xsegments;
-  updateDisplayRegisters(segments, currentDigit);
+  updateDisplayRegisters(segments, currentDigit, currentLed);
   duty[currentDigit] = (duty[currentDigit] + 10) % 100;
   currentDigit = (currentDigit + 1) % DIGITS; // cicleo por los digitos
+  currentLed = (currentLed + 1) % LED_COUNT;
 }
 
-static void updateDisplayRegisters(uint8_t segments, uint8_t digit) {
-  uint16_t shiftRegister = shiftRead();
-  shiftRegister = (shiftRegister & ~DISPLAY_MASK) | (segments & SEG_MASK) | ((digit << DIGIT_SHIFT) & DIGIT_MASK);
+static void updateDisplayRegisters(uint8_t segments, uint8_t digit, uint8_t led) {
+  uint16_t shiftRegister = 0;
+  shiftRegister = (segments & SEG_MASK) | ((digit << DIGIT_SHIFT) & DIGIT_MASK);
+  if (leds[led]) shiftRegister |= ((led + 1) << LEDS_SHIFT) & LEDS_MASK;
+
   shiftWriteWord(shiftRegister);
   shiftOutUpdate();
 }
