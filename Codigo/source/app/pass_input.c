@@ -61,8 +61,12 @@ static void handlePassEdit(char* pass, wheel_input_t wheelResult) {
     updateDisplay();
     break;
   case DOUBLECLICK:
-    for (uint8_t i = 0; i < PASS_LEN; ++i) pass[i] = input.buf[i];
-    state = PASS_CONFIRMED;
+    if (input.bufLen >= 4) {
+      uint8_t i = 0;
+      for (; i < input.bufLen; ++i) pass[i] = input.buf[i];
+      for (; i < PASS_LEN; ++i) pass[i] = 0;
+      state = PASS_CONFIRMED;
+    }
     break;
   case CLICKHOLD:
     state = PASS_CANCELLED;
