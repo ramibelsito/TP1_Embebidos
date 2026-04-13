@@ -67,6 +67,8 @@ typedef struct app_t {
   timer_t changePassTimer;
   timer_t invalidIdTimer;
   timer_t badPassTimer;
+  IdInputState idInputState;
+  PassInputState passInputState;
 } app_t;
 
 void resetState(app_t* app);
@@ -137,10 +139,10 @@ void App_Run(void) {
     }
     break;
   case INPUT_ID: {
-    IdInputState idInputState = handleIdInput(app.id, result);
-    if (idInputState == ID_CANCELLED) {
+    if (!app.invalidIdTimer.started) app.idInputState = handleIdInput(app.id, result);
+    if (app.idInputState == ID_CANCELLED) {
       resetState(&app);
-    } else if (idInputState == ID_CONFIRMED) {
+    } else if (app.idInputState == ID_CONFIRMED) {
       if (searchId(app.id, &app.idxDataset)) {
         app.state = INPUT_PASS;
         initPassInput();
@@ -156,11 +158,11 @@ void App_Run(void) {
     break;
   }
   case INPUT_PASS: {
-    PassInputState passInputState = handlePassInput(app.pass, result, &app.fullPass);
-    if (passInputState == PASS_CANCELLED) {
+    if (!app.badPassTimer.started) app.passInputState = handlePassInput(app.pass, result, &app.fullPass);
+    if (app.passInputState == PASS_CANCELLED) {
       resetState(&app);
       ledOn(RED);
-    } else if (passInputState == PASS_CONFIRMED) {
+    } else if (app.passInputState == PASS_CONFIRMED) {
       if (app.passVerified || checkPass(&app.idxDataset, app.pass, app.fullPass)) {
         if (!app.openLockTimer.started) {
           app.passVerified = true;
@@ -181,7 +183,7 @@ void App_Run(void) {
           resetState(&app);
         }
       }
-    } else if (passInputState == PASS_CHANGE) {
+    } else if (app.passInputState == PASS_CHANGE) {
       user_t* user = &userDataset[app.idxDataset];
       user->fullPass = app.fullPass;
       changePass(user, app.pass);
