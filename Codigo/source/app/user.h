@@ -7,8 +7,8 @@
 // User Information Data Type
 typedef struct user_t
 {
-	uint32_t id;
-	uint32_t password;
+	char id[8];
+	char password[5];
 	bool adminPermit;
 } user_t;
 
