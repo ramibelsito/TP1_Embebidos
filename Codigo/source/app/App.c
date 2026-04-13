@@ -119,7 +119,7 @@ void App_Run(void) {
     writeString("CLICK TO LOG IN - DOUBLE CLICK FOR INTENSITY");
     if (result == CLICK) {
       appState = INPUT_ID;
-      cleanDisplay();
+      initIdInput();
     } else if (result == DOUBLECLICK) {
       appState = DISPLAY_INTENSITY;
       writeString("0000");

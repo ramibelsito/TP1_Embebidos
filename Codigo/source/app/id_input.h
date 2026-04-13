@@ -10,6 +10,7 @@
 
 typedef enum { ID_EDIT, ID_SELECT_DIGIT, ID_CONFIRMED, ID_CANCELLED } IdInputState;
 
+void initIdInput();
 IdInputState handleIdInput(char* id, wheel_input_t wheelResult);
 
 #endif

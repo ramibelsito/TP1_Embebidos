@@ -13,8 +13,15 @@ typedef struct id_input_t {
 static id_input_t input = {.buf = "00000000", .bufIdx = 0, .display = "0000"};
 static IdInputState state = ID_EDIT;
 
-void handleIdEdit(char* id, wheel_input_t wheelResult);
-void handleIdSelectDigit(char* id, wheel_input_t wheelResult);
+static void handleIdEdit(char* id, wheel_input_t wheelResult);
+static void handleIdSelectDigit(wheel_input_t wheelResult);
+static void updateDisplay();
+
+void initIdInput() {
+  input = (id_input_t){.buf = "00000000", .bufIdx = 0, .display = "0000"};
+  state = ID_EDIT;
+  cleanDisplay();
+}
 
 IdInputState handleIdInput(char* id, wheel_input_t wheelResult) {
   for (uint8_t i = 0; i < DIGITS; ++i) {
@@ -25,25 +32,23 @@ IdInputState handleIdInput(char* id, wheel_input_t wheelResult) {
   if (state == ID_EDIT) {
     handleIdEdit(id, wheelResult);
   } else if (state == ID_SELECT_DIGIT) {
-    handleIdSelectDigit(id, wheelResult);
-  }
-
-  for (int8_t i = DIGITS - 1, j = max(DIGITS - 1, input.bufIdx); i >= 0; --i, --j) {
-    input.display[i] = input.buf[j];
+    handleIdSelectDigit(wheelResult);
   }
 
   return state;
 }
 
-void handleIdEdit(char* id, wheel_input_t wheelResult) {
+static void handleIdEdit(char* id, wheel_input_t wheelResult) {
   switch (wheelResult) {
   case RIGHTTURN:
     input.bufIdx = clampInc(input.bufIdx, ID_LEN - 1);
     state = ID_EDIT;
+    updateDisplay();
     break;
   case LEFTTURN:
     input.bufIdx = clampDec(input.bufIdx, 0);
     state = ID_EDIT;
+    updateDisplay();
     break;
   case CLICK:
     state = ID_SELECT_DIGIT;
@@ -60,18 +65,26 @@ void handleIdEdit(char* id, wheel_input_t wheelResult) {
   }
 }
 
-void handleIdSelectDigit(char* id, wheel_input_t wheelResult) {
+static void handleIdSelectDigit(wheel_input_t wheelResult) {
   switch (wheelResult) {
   case RIGHTTURN:
     input.buf[input.bufIdx] = clampInc(input.buf[input.bufIdx], '9');
+    updateDisplay();
     break;
   case LEFTTURN:
     input.buf[input.bufIdx] = clampDec(input.buf[input.bufIdx], '0');
+    updateDisplay();
     break;
   case CLICK:
     state = ID_EDIT;
     break;
   default:
     break;
+  }
+}
+
+static void updateDisplay() {
+  for (int8_t i = DIGITS - 1, j = max(DIGITS - 1, input.bufIdx); i >= 0; --i, --j) {
+    input.display[i] = input.buf[j];
   }
 }
