@@ -25,7 +25,9 @@ static uint8_t digits[DIGITS] = {0};
 static uint8_t displayString[MAX_STR_LEN + STR_PADDING] = {0};
 static uint8_t displayStringLen = 0;
 static uint8_t dutyPercentage = 100;
+
 static bool digitBlink[DIGITS] = {0};
+static uint8_t blinkBuf[DIGITS] = {0};
 
 static void updateDisplay();
 static void updateDisplayRegisters(uint8_t segments, uint8_t digit);
@@ -110,12 +112,17 @@ void cleanDisplay() {
 static void updateDisplay() {
   static uint8_t currentDigit = 0;
   static uint8_t duty[DIGITS] = {0};
-
   // NOTE: this turns on each digits `dutyPercentage` of the time, then keeps
   // them off the rest of the time, and repeats. Depending on how fast each
   // cycle is this may cause a noticeable blink, in that case we would need
   // to intercalate the ons and offs.
-  uint8_t segments = -(duty[currentDigit] < dutyPercentage) & digits[currentDigit];
+  uint8_t xsegments = 0;
+  if (digitBlink[currentDigit]) {
+    xsegments = digits[currentDigit] & blinkBuf[currentDigit];
+  } else {
+    xsegments = digits[currentDigit];
+  }
+  uint8_t segments = -(duty[currentDigit] < dutyPercentage) & xsegments;
   updateDisplayRegisters(segments, currentDigit);
   duty[currentDigit] = (duty[currentDigit] + 1) % 100;
   currentDigit = (currentDigit + 1) % DIGITS; // cicleo por los digitos
@@ -130,15 +137,12 @@ static void updateDisplayRegisters(uint8_t segments, uint8_t digit) {
 
 static void updateSlideAndBlink() {
   static uint8_t slideIdx = 0;
-  static uint8_t blinkBuf[DIGITS] = {0};
 
   if (displayStringLen == 0) {
     for (int i = 0; i < DIGITS; ++i) {
       if (digitBlink[i] && !blinkBuf[i]) {
         blinkBuf[i] = digits[i];
-        digits[i] = 0;
       } else if (digitBlink[i] && blinkBuf[i]) {
-        digits[i] = blinkBuf[i];
         blinkBuf[i] = 0;
       }
     }
