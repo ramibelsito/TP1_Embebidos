@@ -5,10 +5,10 @@
 IntensityState handleDisplayIntensity(wheel_input_t wheelResult) {
   switch (wheelResult) {
   case RIGHTTURN:
-    setDutyPercentage(getDutyPercentage() + 1);
+    setDutyPercentage(getDutyPercentage() + 5);
     return INTENSITY_EDIT;
   case LEFTTURN:
-    setDutyPercentage(getDutyPercentage() - 1);
+    setDutyPercentage(getDutyPercentage() - 5);
     return INTENSITY_EDIT;
   case DOUBLECLICK:
     return INTENSITY_CONFIRM;

@@ -50,6 +50,15 @@ void sensor_read(void) {
         }
 }
 */
+typedef enum {
+  INITIAL,
+  INPUT_ID,
+  INPUT_PASS,
+  DISPLAY_INTENSITY,
+} AppState;
+
+
+void resetState (AppState * appState, bool * firstRun);
 
 void App_Init(void) {
   SysTick_Init(1000);
@@ -68,12 +77,6 @@ void App_Init(void) {
 
 }
 
-typedef enum {
-  INITIAL,
-  INPUT_ID,
-  INPUT_PASS,
-  DISPLAY_INTENSITY,
-} AppState;
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run(void) {
@@ -81,24 +84,32 @@ void App_Run(void) {
   static AppState appState = INITIAL;
   static char id[ID_LEN] = {0};
   static char pass[PASS_LEN] = {0};
-
+  static bool firstRun = true;
 
   // TODO: use `wheelInputFlag`
   wheel_input_t result = readWheel();
   switch (appState) {
   case INITIAL:
-    writeString("CLICK TO LOG IN - DOUBLE CLICK FOR INTENSITY");
-    if (result == CLICK) {
+	if (firstRun)
+	{
+		writeString("CLICK TO LOG IN - DOUBLE CLICK FOR INTENSITY");
+		firstRun = false;
+	}
+	if (result == CLICK) {
       appState = INPUT_ID;
       initIdInput();
     } else if (result == DOUBLECLICK) {
       appState = DISPLAY_INTENSITY;
+      cleanDisplay();
       writeString("0000");
     }
     break;
   case INPUT_ID: {
     IdInputState idInputState = handleIdInput(id, result);
-    if (idInputState == ID_CANCELLED) appState = INITIAL;
+    if (idInputState == ID_CANCELLED)
+	{
+    	resetState(&appState, &firstRun);
+	}
     else if (idInputState == ID_CONFIRMED) {
       appState = INPUT_PASS;
       initPassInput();
@@ -107,19 +118,32 @@ void App_Run(void) {
   }
   case INPUT_PASS: {
     PassInputState passInputState = handlePassInput(pass, result);
-    if (passInputState == PASS_CANCELLED) appState = INITIAL;
+    if (passInputState == PASS_CANCELLED)
+    {
+    	resetState(&appState, &firstRun);
+    }
     if (passInputState == PASS_CONFIRMED) {
       // TODO: check id and pass etc.
     }
     break;
   }
   case DISPLAY_INTENSITY:
-    handleDisplayIntensity(result);
+    IntensityState intensityState = handleDisplayIntensity(result);
+    if (intensityState == INTENSITY_CONFIRM)
+    {
+    	resetState(&appState, &firstRun);
+    }
     break;
   }
 
 }
 
+void resetState (AppState * appState, bool * firstRun)
+{
+	*appState = INITIAL;
+	*firstRun = true;
+	return;
+}
 /*******************************************************************************
  *******************************************************************************
                         LOCAL FUNCTION DEFINITIONS

@@ -18,7 +18,7 @@
 #define DIGIT_MASK 0x300    // 0b0000'0011'0000'0000
 #define DIGIT_SHIFT 8
 
-#define DISPLAY_UPDATE_RATE 15
+#define DISPLAY_UPDATE_RATE 2
 #define DISPLAY_SLIDE_AND_BLINK_RATE 2000
 
 static uint8_t digits[DIGITS] = {0};
@@ -124,7 +124,7 @@ static void updateDisplay() {
   }
   uint8_t segments = -(duty[currentDigit] < dutyPercentage) & xsegments;
   updateDisplayRegisters(segments, currentDigit);
-  duty[currentDigit] = (duty[currentDigit] + 1) % 100;
+  duty[currentDigit] = (duty[currentDigit] + 10) % 100;
   currentDigit = (currentDigit + 1) % DIGITS; // cicleo por los digitos
 }
 

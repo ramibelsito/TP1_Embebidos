@@ -14,6 +14,7 @@
 #define DOUBLECLICKTIME 200
 #define CLICKENABLETIME 100
 
+
 enum
 {
 	FIRSTC,
