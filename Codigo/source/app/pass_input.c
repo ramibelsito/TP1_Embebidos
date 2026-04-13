@@ -2,8 +2,9 @@
 #include "app/utils.h"
 #include "hal/display.h"
 #include "hal/wheel.h"
-#include <ctype.h>
 #include <stdint.h>
+
+
 
 typedef struct pass_input_t {
   char buf[PASS_LEN];
@@ -54,7 +55,7 @@ static void handlePassEdit(char* pass, wheel_input_t wheelResult) {
     updateDisplay();
     break;
   case CLICK:
-    if (!isdigit(input.buf[input.bufIdx])) {
+    if (!IS_DIGIT(input.buf[input.bufIdx])) {
       input.buf[input.bufIdx] = '0';
     }
     state = PASS_SELECT_DIGIT;

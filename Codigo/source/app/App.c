@@ -65,35 +65,7 @@ void App_Init(void) {
   if (!cardInit()) {
 	  ledOn(RED);
 	}
-  /*if(gpioInit(PIN_LED_RED)) {
-          gpioMode(PIN_LED_RED, OUTPUT);
-          gpioWrite(PIN_LED_RED, HIGH);
-  }
 
-  if(gpioInit(PIN_SW2)) {
-          gpioMode(PIN_SW2, INPUT);
-  }
-
-
-  SysTick_Init(1000); // 1ms tick
-
-  pisr_register(led_toggle, 500);     // cada 500 ms
-  pisr_register(sensor_read, 300);    // cada 100 ms
-
-  //testInterruptSW2(PIN_SW2);
-  init_nvic();*/
-#ifdef DEBUG
-  cleanDisplay();
-  writeCharacter('5', 3, 1);
-  writeCharacter('0', 2, 0);
-  writeCharacter('2', 1, 1);
-  writeCharacter('7', 0, 0);
-  cleanDisplay();
-  writeString("HELLO WORLD");
-  cleanDisplay();
-  writeSegments(0b10000000, 0);
-
-#endif //DEBUG
 }
 
 typedef enum {
@@ -105,14 +77,11 @@ typedef enum {
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run(void) {
-#ifndef DEBUG
+
   static AppState appState = INITIAL;
   static char id[ID_LEN] = {0};
   static char pass[PASS_LEN] = {0};
 
-  /*if (!gpioRead(PIN_ENABLE_DATA)) {
-    // ledOn(GREEN);
-  }*/
 
   // TODO: use `wheelInputFlag`
   wheel_input_t result = readWheel();
@@ -148,7 +117,7 @@ void App_Run(void) {
     handleDisplayIntensity(result);
     break;
   }
-#endif // NOT DEBUG
+
 }
 
 /*******************************************************************************

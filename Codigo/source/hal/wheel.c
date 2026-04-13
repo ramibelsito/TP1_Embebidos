@@ -3,8 +3,8 @@
 #include "board.h"
 #include "hal/wheel.h"
 #include "mcal/SysTick.h"
-
-#define WHEEL_READ_TIME	1
+#include "hal/leds.h"
+#define WHEEL_READ_TIME	10
 
 #define BUFFER_SIZE		100 			// Number of elements of encoderData
 
@@ -180,6 +180,7 @@ wheel_input_t readWheel(void)
 				}
 				else if (clickState == 0 && timeCounter > DOUBLECLICKTIME)
 				{
+
 					pressState = NOTCLICK;
 					timeCounter = 0;
 					return CLICK;

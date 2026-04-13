@@ -19,8 +19,8 @@
 #define DIGIT_MASK 0x300    // 0b0000'0011'0000'0000
 #define DIGIT_SHIFT 8
 
-#define DISPLAY_UPDATE_RATE 10
-#define DISPLAY_SLIDE_AND_BLINK_RATE 1000
+#define DISPLAY_UPDATE_RATE 15
+#define DISPLAY_SLIDE_AND_BLINK_RATE 2000
 
 static uint8_t digits[DIGITS] = {0};
 static uint8_t displayString[MAX_STR_LEN + STR_PADDING] = {0};
@@ -134,7 +134,7 @@ static void updateSlideAndBlink() {
         blinkBuf[i] = 0;
       }
     }
-  } else if (displayStringLen < DIGITS) {
+  } else if (displayStringLen <= DIGITS) {
     for (uint8_t i = 0; i < displayStringLen; ++i) {
       digits[i] = displayString[i];
     }
