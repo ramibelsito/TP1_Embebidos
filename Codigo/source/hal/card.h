@@ -16,6 +16,6 @@ bool cardAvailable(void);
 void processCardData(void);
 
 // Returns last card read
-uint32_t cardRead(void);
+uint32_t cardRead(char *pId);
 
 #endif // _CARD_H_

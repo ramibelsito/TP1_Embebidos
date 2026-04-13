@@ -3,6 +3,8 @@
 #include "hal/display.h"
 #include "hal/wheel.h"
 #include <stdint.h>
+#include "hal/card.h"
+#include "hal/leds.h"
 
 typedef struct id_input_t {
   char buf[ID_LEN];
@@ -24,19 +26,26 @@ void initIdInput() {
 }
 
 IdInputState handleIdInput(char* id, wheel_input_t wheelResult) {
-  for (uint8_t i = 0; i < DIGITS; ++i) {
-    bool blink = (state == ID_EDIT) && (i == min(DIGITS - 1, input.bufIdx));
-    writeCharacter(input.display[i], i, blink);
-    enableDot(i, blink);
-  }
+	if (cardAvailable())
+	 {
+		ledOn(BLUE);
+		 processCardData();
+		 cardRead(id);
+		 return ID_CONFIRMED;
+	 }
+	for (uint8_t i = 0; i < DIGITS; ++i) {
+	bool blink = (state == ID_EDIT) && (i == min(DIGITS - 1, input.bufIdx));
+	writeCharacter(input.display[i], i, blink);
+	enableDot(i, blink);
+	}
 
-  if (state == ID_EDIT) {
-    handleIdEdit(id, wheelResult);
-  } else if (state == ID_SELECT_DIGIT) {
-    handleIdSelectDigit(wheelResult);
-  }
+	if (state == ID_EDIT) {
+	handleIdEdit(id, wheelResult);
+	} else if (state == ID_SELECT_DIGIT) {
+	handleIdSelectDigit(wheelResult);
+	}
 
-  return state;
+	return state;
 }
 
 static void handleIdEdit(char* id, wheel_input_t wheelResult) {

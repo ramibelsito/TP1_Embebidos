@@ -123,7 +123,7 @@ bool cardInit(void)
 void timerForTimeout (void) {
     timeoutCounter++;
 
-    checkTimeout();
+    //checkTimeout();
 }
 
 // Handler para las interrupciones de la tarjeta
@@ -136,6 +136,7 @@ void cardHandler(void)
     // ============================
     if (flags & (1 << 0))
     {
+
         cleanFlags(PIN_ENABLE_DATA);
 
         receiving       = true;
@@ -449,16 +450,21 @@ void processCardData(void) {
 		lastBitTime = 0;
 		bitCount = 0;
 		lastCard = calculateIdNumber();     // Actualiza lastCard con el valor de id de la tarjeta procesada
+
 	}
 }
 
 
 
 
-uint32_t cardRead(void)
+uint32_t cardRead(char *pId)
 {
+	for (int j = 0; j < 8; j++)
+	{
+		pId[j] = id[j];
+	}
 	uint32_t cardHolder = lastCard;
 	cleanBufferAndId();
-	lastCard = 0; // int de id
-    return cardHolder;                // Devuelve el último Id calculado
+	lastCard = 0;
+	return cardHolder;              // Devuelve el último Id calculado
 }

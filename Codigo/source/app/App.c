@@ -135,6 +135,29 @@ void App_Run(void) {
     }
     break;
   }
+	/*char algo[]= "hola";
+	if (!gpioRead(PIN_ENABLE_DATA))
+	{
+		//ledToggle(RED);
+	}
+	uint32_t idReal = 60612683;
+	uint32_t id;
+	if (cardAvailable())
+	 {
+		//ledOn(BLUE);
+		 processCardData();
+		 id = cardRead(algo);
+		 if (id == idReal)
+		{
+			ledOn(GREEN);
+			id = 0;
+		}
+		else
+		{
+			ledOn(RED);
+		}
+	 }*/
+
 
 }
 
