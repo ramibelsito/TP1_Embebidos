@@ -7,9 +7,19 @@
 
 #define PASS_LEN 5
 
-typedef enum { PASS_EDIT, PASS_SELECT_DIGIT, PASS_CONFIRMED, PASS_CANCELLED } PassInputState;
+typedef enum {
+  PASS_EDIT,
+  PASS_SELECT_DIGIT,
+  PASS_CONFIRMED,
+  PASS_CANCELLED,
+  PASS_CHANGE,
+  PASS_CHANGE_EDIT,
+  PASS_CHANGE_SELECT_DIGIT,
+  PASS_CHANGE_CONFIRMED,
+  PASS_CHANGE_CANCELLED,
+} PassInputState;
 
 void initPassInput();
-PassInputState handlePassInput(char* pass, wheel_input_t wheelResult, bool * fullPass);
+PassInputState handlePassInput(char* pass, wheel_input_t wheelResult, bool* fullPass);
 
 #endif
