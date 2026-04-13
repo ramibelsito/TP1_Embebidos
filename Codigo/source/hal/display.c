@@ -20,7 +20,7 @@
 #define DIGIT_SHIFT 8
 #define LEDS_SHIFT 10
 
-#define DISPLAY_UPDATE_RATE 20
+#define DISPLAY_UPDATE_RATE 2
 #define DISPLAY_SLIDE_AND_BLINK_RATE 2000
 
 static uint8_t digits[DIGITS] = {0};
