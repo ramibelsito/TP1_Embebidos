@@ -137,6 +137,11 @@ void App_Run(void) {
         	turnOnDisplayLed(0);
         	resetState(&appState, &firstRun);
     	}
+    	else
+    	{
+    		cleanDisplay();
+    		writeString("BAD PASS");
+    	}
       // TODO: check id and pass etc.
     }
     break;
