@@ -1,6 +1,8 @@
 #include "SysTick.h"
 #include "hardware.h"
+#include "hal/IRQN_Ports.h"
 //#include "gpio.h"
+
 //#include "hal/board.h"
 /**
  * @brief Initialize SysTic driver
@@ -17,6 +19,7 @@ static uint32_t pisr_registered = 0;
 
 __ISR__ SysTick_Handler(void)
 {
+	toggleInterruptFlag( 1);
     isr_count++;
 
     for (uint32_t i = 0; i < pisr_registered; i++) {
@@ -24,6 +27,7 @@ __ISR__ SysTick_Handler(void)
             interruptions[i].callback();
         }
     }
+    toggleInterruptFlag( 0);
 }
 
 bool pisr_register(pisr_callback_t fun, uint32_t period)

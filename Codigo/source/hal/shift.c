@@ -2,6 +2,7 @@
 #include "mcal/gpio.h"
 #include <stdint.h>
 #include "hal/board.h"
+#include "hal/IRQN_Ports.h"
 
 
 #define OUTCANT 16

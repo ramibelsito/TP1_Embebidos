@@ -101,19 +101,19 @@ bool cardInit(void)
 
 // Aumenta su valor a medida que entra el systick. Sirve de referencia para veificar si se pasa un tiempo límite de espera
 void timerForTimeout (void) {
-	toggleInterruptFlag();
+	//toggleInterruptFlag();
     timeoutCounter++;
 
     if(receiving) {
 		checkTimeout();
     }
-    toggleInterruptFlag();
+    //toggleInterruptFlag();
 }
 
 // Handler para las interrupciones de la tarjeta
 void cardHandler(void)
 {
-	toggleInterruptFlag();
+	//toggleInterruptFlag();
     uint32_t flags = PORTC->ISFR;
 
     // ============================
@@ -238,7 +238,7 @@ void cardHandler(void)
             return;
         }
     }
-    toggleInterruptFlag();
+    //toggleInterruptFlag();
 }
 
 

@@ -80,7 +80,7 @@ bool wheelInit()
 }
 
 void wheelReadGPIO(void) {
-	toggleInterruptFlag();
+	//toggleInterruptFlag();
 	encoderData[idx].rcha = gpioRead(PIN_RCHA);
 	encoderData[idx].rchb = gpioRead(PIN_RCHB);
 	encoderData[idx].rchd = gpioRead(PIN_RCHD);
@@ -91,7 +91,7 @@ void wheelReadGPIO(void) {
 		idx = idx % BUFFER_SIZE;
 	}
 	timeCounter += 1;
-	toggleInterruptFlag();
+	//toggleInterruptFlag();
 }
 
 

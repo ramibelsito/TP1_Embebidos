@@ -9,8 +9,8 @@
 
 pCallBack_t pCallBackList[CANT_PUERTOS][MAX_INTERRUPT] = {{{},{},{},{},{},{},{},{}},{{},{},{},{},{},{},{},{}},{{},{},{},{},{},{},{},{}},{{},{},{},{},{},{},{},{}},{{},{},{},{},{},{},{},{}}};
 
-void toggleInterruptFlag(void) {
-	gpioToggle(PIN_INTERRUPTION_FLAG);
+void toggleInterruptFlag(bool fte) {
+	gpioWrite(PIN_INTERRUPTION_FLAG, fte);
 }
 
 
